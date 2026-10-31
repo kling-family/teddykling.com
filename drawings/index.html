@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Teddy's drawings</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --blue:#1C4FA0; --yellow:#FFCB2E; --orange:#F07B1E; --cream:#FFF4C9; --page:#E9F3FF; --ink:#1C2B4A; --soft:#4A5568; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: "Fredoka", system-ui, sans-serif; font-weight: 500; font-size: 1.2rem; line-height: 1.5; }
+  :focus-visible { outline: 4px solid var(--orange); outline-offset: 3px; border-radius: 6px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  header { position: relative; background: var(--blue); color: #fff; overflow: hidden; }
+  header .wrap { position: relative; z-index: 1; padding-top: 28px; padding-bottom: 90px; }
+  .home { color: #CFE0FF; text-decoration: none; font-weight: 600; }
+  .home:hover { text-decoration: underline; }
+  h1 { font-weight: 600; font-size: clamp(3rem, 12vw, 5.5rem); line-height: .95; margin: 18px 0 0; }
+  h1 .dot { color: var(--yellow); }
+  .mountains { position: absolute; right: 0; bottom: -1px; width: min(380px, 70vw); height: auto; }
+  main.wrap { padding-top: 48px; padding-bottom: 64px; }
+  .count { margin: 0 0 24px; color: var(--soft); }
+  .grid { display: grid; gap: 28px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .art { margin: 0; }
+  .art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; border: 6px solid #fff; box-shadow: 0 14px 24px -16px rgba(28,43,74,.5); }
+  .art:nth-child(odd) img { transform: rotate(-1.5deg); }
+  .art:nth-child(even) img { transform: rotate(1.2deg); }
+  .art figcaption { margin-top: 12px; font-weight: 600; color: var(--blue); }
+  .back { display: inline-block; margin-top: 40px; color: var(--blue); font-weight: 600; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  footer { background: var(--blue); color: #CFE0FF; padding: 36px 0 44px; font-size: 1.05rem; }
+  footer b { color: #fff; font-weight: 600; } footer .dot { color: var(--yellow); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="home" href="../">Teddy's trail</a>
+      <h1>My drawings<span class="dot">.</span></h1>
+    </div>
+    <svg class="mountains" viewBox="0 0 560 220" aria-hidden="true"><path d="M0 220 L170 70 L250 150 L390 20 L560 190 L560 220 Z" fill="#F07B1E"/><path d="M390 20 L358 56 L376 50 L392 64 L408 48 L424 58 Z" fill="#FFF4C9"/></svg>
+  </header>
+  <main class="wrap">
+    <p class="count">Every drawing, newest first.</p>
+    <div class="grid">
+      <!-- Newest drawing goes at the top of this list -->
+      <figure class="art"><img src="drawing-1.jpg" width="1600" height="1200" alt="Teddy's crayon drawing of a giant orange pumpkin, with a person standing next to it, a tree, and clouds in a blue sky"><figcaption>My first drawing on my website!</figcaption></figure>
+    </div>
+    <a class="back" href="../#trail">Back to the trail</a>
+  </main>
+  <footer><div class="wrap"><b>Teddy<span class="dot">.</span></b> Built by Teddy in partnership with his parents.</div></footer>
+</body>
+</html>
