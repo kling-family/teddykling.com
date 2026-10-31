@@ -186,11 +186,17 @@
         img.tabIndex = 0;
         img.setAttribute('role', 'button');
         var open = function () {
-          big.src = img.currentSrc || img.src;
-          big.alt = img.alt;
           var fc = img.closest('figure').querySelector('figcaption');
-          cap.textContent = fc ? fc.textContent : '';
-          d.showModal();
+          var show = function () {
+            big.alt = img.alt;
+            cap.textContent = fc ? fc.textContent : '';
+            if (!d.open) d.showModal();
+          };
+          big.onload = null;
+          big.removeAttribute('src');
+          big.onload = show;
+          big.src = img.currentSrc || img.src;
+          if (big.complete && big.naturalWidth) { big.onload = null; show(); }
         };
         img.addEventListener('click', open);
         img.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
