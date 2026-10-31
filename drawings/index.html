@@ -34,6 +34,15 @@
   .back:hover { text-decoration: underline; }
   footer { background: var(--blue); color: #CFE0FF; padding: 36px 0 44px; font-size: 1.05rem; }
   footer b { color: #fff; font-weight: 600; } footer .dot { color: var(--yellow); }
+
+  /* Click a drawing to see it bigger */
+  .art img { cursor: zoom-in; }
+  dialog.zoom { border: 0; padding: 0; background: transparent; max-width: min(92vw, 1100px); max-height: 92vh; overflow: visible; }
+  dialog.zoom::backdrop { background: rgba(20, 35, 70, .78); }
+  dialog.zoom img { display: block; max-width: min(92vw, 1100px); max-height: 80vh; width: auto; height: auto; border-radius: 20px; border: 8px solid #fff; box-shadow: 0 24px 50px rgba(0,0,0,.45); cursor: zoom-out; }
+  dialog.zoom p { margin: 14px 0 0; text-align: center; color: #fff; font-weight: 600; font-size: 1.4rem; }
+  dialog.zoom .close { position: absolute; top: -18px; right: -18px; width: 48px; height: 48px; border-radius: 50%; border: 4px solid var(--ink); background: var(--yellow); color: var(--ink); font: 600 1.6rem/1 "Fredoka", sans-serif; cursor: pointer; }
+  @media (prefers-reduced-motion: no-preference) { dialog.zoom[open] { animation: pop .18s ease-out; } @keyframes pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } } }
 </style>
 </head>
 <body>
@@ -53,5 +62,32 @@
     <a class="back" href="../#trail">Back to the trail</a>
   </main>
   <footer><div class="wrap"><b>Teddy<span class="dot">.</span></b> Built by Teddy in partnership with his parents.</div></footer>
+
+  <dialog class="zoom" aria-label="Drawing, larger">
+    <button class="close" type="button" aria-label="Close">×</button>
+    <img alt="">
+    <p></p>
+  </dialog>
+  <script>
+    (function () {
+      var d = document.querySelector('dialog.zoom');
+      if (!d || !d.showModal) return;
+      var big = d.querySelector('img'), cap = d.querySelector('p');
+      document.querySelectorAll('.art img').forEach(function (img) {
+        img.tabIndex = 0;
+        img.setAttribute('role', 'button');
+        var open = function () {
+          big.src = img.currentSrc || img.src;
+          big.alt = img.alt;
+          var fc = img.closest('figure').querySelector('figcaption');
+          cap.textContent = fc ? fc.textContent : '';
+          d.showModal();
+        };
+        img.addEventListener('click', open);
+        img.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      });
+      d.addEventListener('click', function () { d.close(); });
+    })();
+  </script>
 </body>
 </html>
