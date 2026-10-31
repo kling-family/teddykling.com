@@ -71,6 +71,10 @@
   footer { background: var(--blue); color: #CFE0FF; padding: 36px 0 44px; font-size: 1.05rem; }
   footer b { color: #fff; font-weight: 600; }
   footer .dot { color: var(--yellow); }
+
+  .art { margin: 0; }
+  .art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; border: 6px solid #fff; box-shadow: 0 14px 24px -16px rgba(28,43,74,.5); transform: rotate(-1.5deg); }
+  .art figcaption { margin-top: 12px; font-weight: 600; color: var(--blue); }
 </style>
 </head>
 <body>
@@ -104,7 +108,7 @@
     <section class="stop-section" id="drawings" aria-labelledby="h-drawings">
       <div class="sec-head"><span class="pin" style="background:var(--yellow)" aria-hidden="true">1</span><h2 id="h-drawings">My drawings</h2></div>
       <div class="grid">
-        <div class="frame">A drawing goes here</div>
+        <figure class="art"><img src="drawings/drawing-1.jpg" width="1600" height="1200" alt="Teddy's crayon drawing of a giant orange pumpkin, with a person standing next to it, a tree, and clouds in a blue sky"><figcaption>My first drawing on my website!</figcaption></figure>
         <div class="frame">A drawing goes here</div>
         <div class="frame">A drawing goes here</div>
       </div>
