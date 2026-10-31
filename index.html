@@ -5,21 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Teddy</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --page: #F4F6F1; --ink: #1E2B3F; --soft: #4A5568; }
+  :root {
+    --blue: #1C4FA0;
+    --sky: #7EC4F5;
+    --yellow: #FFCB2E;
+    --orange: #F07B1E;
+    --cream: #FFF4C9;
+    --page: #E9F3FF;
+    --ink: #1C2B4A;
+    --soft: #4A5568;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--page); color: var(--ink); font-family: "Atkinson Hyperlegible", system-ui, sans-serif; padding: 24px 16px; text-align: center; }
-  h1 { font-family: "Young Serif", Georgia, serif; font-weight: 400; font-size: clamp(4rem, 18vw, 8rem); line-height: .9; margin: 0 0 20px; letter-spacing: -.02em; }
-  p { font-size: 1.25rem; color: var(--soft); margin: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: "Fredoka", system-ui, sans-serif; font-weight: 500; font-size: 1.2rem; line-height: 1.5; }
+  a { color: inherit; }
+  :focus-visible { outline: 4px solid var(--orange); outline-offset: 3px; border-radius: 6px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+  /* Header with mountains */
+  header { position: relative; background: var(--blue); color: #fff; overflow: hidden; }
+  header .wrap { position: relative; z-index: 1; padding-top: 56px; padding-bottom: 150px; }
+  h1 { font-weight: 600; font-size: clamp(5rem, 20vw, 10rem); line-height: .85; margin: 0 0 18px; letter-spacing: -.01em; }
+  h1 .dot { color: var(--yellow); }
+  .tag { margin: 0; font-size: 1.5rem; color: #CFE0FF; }
+  .mountains { position: absolute; right: 0; bottom: -1px; width: min(560px, 80vw); height: auto; }
+  .stars circle { fill: var(--cream); }
+
+  /* Trail map */
+  .map { position: relative; padding: 48px 0 24px; }
+  .map h2 { font-weight: 600; font-size: 1.8rem; margin: 0 0 8px; }
+  .map .hint { margin: 0 0 24px; color: var(--soft); }
+  .trail { position: relative; height: 460px; }
+  .trail svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stop { position: absolute; display: flex; align-items: center; gap: 14px; text-decoration: none; font-weight: 600; font-size: 1.5rem; }
+  .stop b { font-weight: 600; background: var(--page); padding: 2px 10px; border-radius: 10px; }
+  .stop:hover b { text-decoration: underline; text-underline-offset: 4px; }
+  .pin { width: 72px; height: 72px; flex: none; border-radius: 50%; border: 6px solid var(--ink); display: grid; place-items: center; font-size: 1.8rem; color: var(--ink); }
+  .s1 { left: 4%;  top: 10px; }
+  .s2 { left: 56%; top: 100px; }
+  .s3 { left: 40%; top: 250px; }
+  .s4 { left: 10%; top: 370px; }
+  @media (max-width: 680px) {
+    .trail { height: auto; display: flex; flex-direction: column; gap: 28px; padding-left: 4px; }
+    .trail svg { display: none; }
+    .trail::before { content: ""; position: absolute; left: 38px; top: 20px; bottom: 20px; border-left: 6px dotted var(--orange); }
+    .stop { position: relative; left: auto; top: auto; }
+  }
+
+  /* Sections */
+  section.stop-section { padding: 64px 0; border-top: 3px dashed rgba(28,79,160,.18); scroll-margin-top: 12px; }
+  .sec-head { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; }
+  .sec-head .pin { width: 64px; height: 64px; font-size: 1.6rem; }
+  .sec-head h2 { font-weight: 600; font-size: clamp(2rem, 6vw, 2.8rem); line-height: 1.1; margin: 0; }
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .frame { aspect-ratio: 4 / 3; border-radius: 20px; border: 4px dashed rgba(28,79,160,.35); background: #fff; display: grid; place-items: center; text-align: center; padding: 16px; color: var(--soft); font-size: 1.1rem; }
+  .back { display: inline-block; margin-top: 22px; color: var(--blue); font-weight: 600; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+
+  footer { background: var(--blue); color: #CFE0FF; padding: 36px 0 44px; font-size: 1.05rem; }
+  footer b { color: #fff; font-weight: 600; }
+  footer .dot { color: var(--yellow); }
 </style>
 </head>
 <body>
-  <main>
-    <h1>Teddy</h1>
-    <p>Something fun is being built here. Check back soon!</p>
+  <header>
+    <div class="wrap">
+      <h1>Teddy<span class="dot">.</span></h1>
+      <p class="tag">Come explore with me</p>
+    </div>
+    <svg class="mountains" viewBox="0 0 560 220" aria-hidden="true">
+      <g class="stars"><circle cx="120" cy="40" r="3"/><circle cx="200" cy="80" r="2.5"/><circle cx="330" cy="30" r="2.5"/></g>
+      <path d="M0 220 L170 70 L250 150 L390 20 L560 190 L560 220 Z" fill="#F07B1E"/>
+      <path d="M390 20 L358 56 L376 50 L392 64 L408 48 L424 58 Z" fill="#FFF4C9"/>
+    </svg>
+  </header>
+
+  <main class="wrap">
+    <nav class="map" id="trail" aria-label="Teddy's trail">
+      <h2>Pick a stop on my trail</h2>
+      <p class="hint">Tap a circle to go there.</p>
+      <div class="trail">
+        <svg viewBox="0 0 1000 460" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M80 46 C 330 20, 420 120, 600 136 S 760 260, 470 286 S 140 330, 150 406" fill="none" stroke="#F07B1E" stroke-width="7" stroke-dasharray="4 16" stroke-linecap="round"/>
+        </svg>
+        <a class="stop s1" href="#drawings"><span class="pin" style="background:var(--yellow)">1</span><b>My drawings</b></a>
+        <a class="stop s2" href="#lego"><span class="pin" style="background:var(--sky)">2</span><b>Lego builds</b></a>
+        <a class="stop s3" href="#stories"><span class="pin" style="background:var(--orange)">3</span><b>Stories</b></a>
+        <a class="stop s4" href="#adventures"><span class="pin" style="background:var(--yellow)">4</span><b>Adventures</b></a>
+      </div>
+    </nav>
+
+    <section class="stop-section" id="drawings" aria-labelledby="h-drawings">
+      <div class="sec-head"><span class="pin" style="background:var(--yellow)" aria-hidden="true">1</span><h2 id="h-drawings">My drawings</h2></div>
+      <div class="grid">
+        <div class="frame">A drawing goes here</div>
+        <div class="frame">A drawing goes here</div>
+        <div class="frame">A drawing goes here</div>
+      </div>
+      <a class="back" href="#trail">Back to the trail</a>
+    </section>
+
+    <section class="stop-section" id="lego" aria-labelledby="h-lego">
+      <div class="sec-head"><span class="pin" style="background:var(--sky)" aria-hidden="true">2</span><h2 id="h-lego">Lego builds</h2></div>
+      <div class="grid">
+        <div class="frame">A Lego build goes here</div>
+        <div class="frame">A Lego build goes here</div>
+        <div class="frame">A Lego build goes here</div>
+      </div>
+      <a class="back" href="#trail">Back to the trail</a>
+    </section>
+
+    <section class="stop-section" id="stories" aria-labelledby="h-stories">
+      <div class="sec-head"><span class="pin" style="background:var(--orange)" aria-hidden="true">3</span><h2 id="h-stories">Stories</h2></div>
+      <div class="grid">
+        <div class="frame">A story I made up goes here</div>
+        <div class="frame">A story I made up goes here</div>
+      </div>
+      <a class="back" href="#trail">Back to the trail</a>
+    </section>
+
+    <section class="stop-section" id="adventures" aria-labelledby="h-adventures">
+      <div class="sec-head"><span class="pin" style="background:var(--yellow)" aria-hidden="true">4</span><h2 id="h-adventures">Adventures</h2></div>
+      <div class="grid">
+        <div class="frame">A photo from an adventure goes here</div>
+        <div class="frame">A photo from an adventure goes here</div>
+        <div class="frame">A photo from an adventure goes here</div>
+      </div>
+      <a class="back" href="#trail">Back to the trail</a>
+    </section>
   </main>
+
+  <footer>
+    <div class="wrap"><b>Teddy<span class="dot">.</span></b> Built by Teddy in partnership with his parents.</div>
+  </footer>
 </body>
 </html>
