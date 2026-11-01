@@ -51,7 +51,7 @@
   .map { position: relative; padding: 48px 0 24px; }
   .map h2 { font-weight: 600; font-size: 1.8rem; margin: 0 0 8px; }
   .map .hint { margin: 0 0 24px; color: var(--soft); }
-  .trail { position: relative; height: 460px; }
+  .trail { position: relative; height: 560px; }
   .trail svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .stop { position: absolute; display: flex; align-items: center; gap: 14px; text-decoration: none; font-weight: 600; font-size: 1.5rem; }
   .stop b { font-weight: 600; background: var(--page); padding: 2px 10px; border-radius: 10px; }
@@ -61,6 +61,7 @@
   .s2 { left: 56%; top: 100px; }
   .s3 { left: 40%; top: 250px; }
   .s4 { left: 10%; top: 370px; }
+  .s5 { left: 52%; top: 470px; }
   @media (max-width: 680px) {
     .trail { height: auto; display: flex; flex-direction: column; gap: 28px; padding-left: 4px; }
     .trail svg { display: none; }
@@ -84,6 +85,7 @@
 
   .art { margin: 0; }
   .art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; background: #fff; border-radius: 20px; border: 6px solid #fff; box-shadow: 0 14px 24px -16px rgba(28,43,74,.5); transform: rotate(-1.5deg); }
+  .art video { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; background: #fff; border-radius: 20px; border: 6px solid #fff; box-shadow: 0 14px 24px -16px rgba(28,43,74,.5); }
   .art figcaption { margin-top: 12px; font-weight: 600; color: var(--blue); }
 
   .see-all { display: inline-block; margin: 24px 18px 0 0; background: var(--yellow); color: var(--ink); font-weight: 600; text-decoration: none; padding: 10px 20px; border-radius: 999px; border: 4px solid var(--ink); }
@@ -117,13 +119,14 @@
       <h2>Pick a stop on my trail</h2>
       <p class="hint">Tap a circle to go there.</p>
       <div class="trail">
-        <svg viewBox="0 0 1000 460" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M80 46 C 330 20, 420 120, 600 136 S 760 260, 470 286 S 140 330, 150 406" fill="none" stroke="#F07B1E" stroke-width="7" stroke-dasharray="4 16" stroke-linecap="round"/>
+        <svg viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M80 46 C 330 20, 420 120, 600 136 S 760 260, 470 286 S 140 330, 150 406 S 380 520, 560 506" fill="none" stroke="#F07B1E" stroke-width="7" stroke-dasharray="4 16" stroke-linecap="round"/>
         </svg>
         <a class="stop s1" href="#drawings"><span class="pin" style="background:var(--yellow)">1</span><b>My drawings</b></a>
         <a class="stop s2" href="#lego"><span class="pin" style="background:var(--sky)">2</span><b>Lego builds</b></a>
         <a class="stop s3" href="#stories"><span class="pin" style="background:var(--orange)">3</span><b>Stories</b></a>
         <a class="stop s4" href="#adventures"><span class="pin" style="background:var(--yellow)">4</span><b>Adventures</b></a>
+        <a class="stop s5" href="#made"><span class="pin" style="background:var(--sky)">5</span><b>Made by Teddy</b></a>
       </div>
     </nav>
 
@@ -163,6 +166,15 @@
         <div class="frame">A photo from an adventure goes here</div>
         <div class="frame">A photo from an adventure goes here</div>
         <div class="frame">A photo from an adventure goes here</div>
+      </div>
+      <a class="back" href="#trail">Back to the trail</a>
+    </section>
+
+    <section class="stop-section" id="made" aria-labelledby="h-made">
+      <div class="sec-head"><span class="pin" style="background:var(--sky)" aria-hidden="true">5</span><h2 id="h-made">Made by Teddy</h2></div>
+      <div class="grid">
+        <figure class="art"><video src="movies/icy-cat-walk.mp4" poster="movies/icy-cat-walk.jpg" controls playsinline preload="none" width="1280" height="984" aria-label="The Icy Cat Walk, a ScratchJr movie by Teddy"></video><figcaption>The Icy Cat Walk</figcaption></figure>
+        <div class="frame">My next movie or game goes here</div>
       </div>
       <a class="back" href="#trail">Back to the trail</a>
     </section>
