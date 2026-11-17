@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="A sword game designed by Teddy.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Teddy's Sword Game">
+<meta property="og:description" content="A sword game designed by Teddy.">
+<meta property="og:url" content="https://teddykling.com/sword-game/">
+<meta property="og:image" content="https://teddykling.com/sword-game/cover.jpg">
+<title>Teddy's Sword Game</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one game stage (16:9 canvas) with HTML cards on top, touch pad below on phones and tablets */
+:root{
+  --blue:#1C4FA0; --sky:#7EC4F5; --yellow:#FFCB2E; --orange:#F07B1E; --cream:#FFF4C9; --ink:#1C2B4A;
+  --bg:#E9F3FF; --fg:#1C2B4A; --muted:#4A5B7E;
+  --display:'Fredoka', ui-rounded, system-ui, sans-serif;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--display);box-sizing:border-box}
+main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.top{background:var(--blue);padding:14px max(16px,env(safe-area-inset-left,0px))}
+.top .in{max-width:960px;margin:0 auto;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top a{color:#CFE0FF;font-weight:600;text-decoration:none;font-size:18px}
+.top a:hover{text-decoration:underline}
+.top a b{color:#fff}.top .dot{color:var(--yellow)}
+.top span{color:#CFE0FF;font-size:16px}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:var(--blue);box-shadow:0 0 0 4px var(--blue)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.card{position:absolute;inset:0;display:grid;place-items:center;background:rgba(28,43,74,.45);padding:12px}
+.card.top{place-items:start center;background:transparent}
+.card-inner{background:var(--cream);color:var(--ink);border:4px solid var(--blue);border-radius:22px;padding:18px 28px 20px;
+  text-align:center;max-width:470px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.eyebrow{font-weight:600;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;font-size:14px}
+.card h2{margin:0;color:var(--blue);font-weight:700;font-size:clamp(22px,4vw,36px);line-height:1.1;text-wrap:balance}
+.card p{margin:0;font-size:clamp(15px,2.2vw,19px);line-height:1.35;text-wrap:balance}
+.namebox{display:flex;flex-direction:column;gap:4px;align-items:center;margin-top:4px}
+.namebox label{font-weight:600;color:var(--blue);font-size:17px}
+.namebox input{font:inherit;font-weight:600;font-size:22px;text-align:center;width:min(260px,60vw);padding:4px 10px;
+  border:3px solid var(--blue);border-radius:12px;background:#FFFFFF;color:var(--ink)}
+.namebox input:focus-visible{outline:4px solid var(--orange);outline-offset:2px}
+.btn{font:inherit;font-weight:700;font-size:22px;background:var(--yellow);color:var(--ink);border:3px solid var(--blue);
+  border-radius:999px;padding:6px 30px;cursor:pointer;margin-top:6px}
+.btn:hover{background:#FFD95C}
+.btn:focus-visible{outline:4px solid var(--orange);outline-offset:3px}
+.keys{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;color:var(--muted);font-size:16px}
+kbd{font-family:inherit;font-weight:600;background:var(--cream);color:var(--ink);border:2px solid var(--blue);border-bottom-width:4px;border-radius:8px;padding:0 8px;margin-right:4px}
+.pad{display:none;justify-content:space-between;gap:12px;user-select:none;-webkit-user-select:none}
+.pad .grp{display:flex;gap:12px}
+.pad button{width:78px;height:78px;border-radius:50%;border:4px solid var(--blue);background:var(--cream);color:var(--ink);
+  font:inherit;font-weight:700;font-size:18px;touch-action:none;-webkit-tap-highlight-color:transparent}
+.pad button.big{background:var(--yellow)}
+.pad button.on{background:var(--orange);color:#fff}
+@media (pointer:coarse){.pad{display:flex}.keys{display:none}}
+@media (max-width:560px){
+  .card-inner{padding:8px 14px 10px;gap:2px;border-width:3px;border-radius:16px}
+  .eyebrow{font-size:11px}.card h2{font-size:19px}.card p{font-size:13px}
+  .btn{font-size:16px;padding:3px 20px;margin-top:3px}
+  .card-inner:has(.namebox:not([hidden])) p{display:none}
+  .namebox{margin-top:2px;gap:2px}.namebox label{font-size:13px}.namebox input{font-size:16px;padding:2px 8px}
+  .pad button{width:66px;height:66px;font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="top"><div class="in"><a href="../#made">&larr; Back to <b>Teddy<span class="dot">.</span></b></a><span>A game designed by Teddy</span></div></div>
+<main>
+<div class="wrap">
+  <div class="stage">
+    <canvas id="game" width="960" height="540" aria-label="Teddy's sword game"></canvas>
+    <div class="card" id="card">
+      <div class="card-inner">
+        <div class="eyebrow" id="cardEyebrow"></div>
+        <h2 id="cardTitle"></h2>
+        <p id="cardText"></p>
+        <div class="namebox" id="nameBox" hidden>
+          <label for="heroName">Name your hero</label>
+          <input id="heroName" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Type a name">
+        </div>
+        <button class="btn" id="cardBtn" type="button"></button>
+      </div>
+    </div>
+  </div>
+  <div class="keys">
+    <span><kbd>&larr;</kbd><kbd>&rarr;</kbd> move</span>
+    <span><kbd>&uarr;</kbd> jump</span>
+    <span><kbd>Space</kbd> swing your swords</span>
+  </div>
+  <div class="pad">
+    <div class="grp">
+      <button type="button" data-k="left" aria-label="Move left">&#9664;</button>
+      <button type="button" data-k="right" aria-label="Move right">&#9654;</button>
+    </div>
+    <div class="grp">
+      <button type="button" data-k="up">Jump</button>
+      <button type="button" class="big" data-k="swing">Swing</button>
+    </div>
+  </div>
+</div>
+</main>
+<script>
+(() => {
+const W = 960, H = 540, GROUND = 470;
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+const C = {blue:'#1C4FA0', sky:'#7EC4F5', yellow:'#FFCB2E', orange:'#F07B1E', cream:'#FFF4C9', ink:'#1C2B4A'};
+const FONT = "'Fredoka', ui-rounded, system-ui, sans-serif";
+
+const LEVELS = [
+  {name:'Ice monsters', type:'ice', count:7, maxAlive:3, sky:['#DDF1FF','#7EC4F5'], ground:'#F4FBFF', edge:'#BFE3FF', fx:'snow'},
+  {name:'Rock monsters', type:'rock', count:7, maxAlive:3, sky:['#FFF4C9','#FFCB2E'], ground:'#B98A5E', edge:'#8C6440', fx:null},
+  {name:'Lightning monsters', type:'zap', count:8, maxAlive:4, sky:['#16223F','#1C4FA0'], ground:'#2A3A66', edge:'#1C2B4A', fx:'storm'}
+];
+const MON = {
+  ice:  {w:50, h:56, hp:3, speed:1.2},
+  rock: {w:66, h:60, hp:6, speed:0.8},
+  zap:  {w:50, h:50, hp:9, speed:2.0}
+};
+const BIG = {ice:{name:'Big ice monster', hp:12}, rock:{name:'Giant rock monster', hp:30}, zap:{name:'Big lightning monster', hp:60}};
+// Sword looks per level (stand-ins until Teddy says what they look like)
+const SWORD = [null,
+  {len:44, blade:'#D9E2EC', glow:null},
+  {len:52, blade:'#EAF6FF', glow:C.sky},
+  {len:60, blade:'#FFFFFF', glow:C.sky},
+  {len:68, blade:'#FFF4C9', glow:C.orange}];
+const PCOL = {ice:['#FFFFFF','#CFEFFF','#7EC4F5'], rock:['#8D939C','#6E737C','#B0B5BC'], zap:['#FFCB2E','#FFF4C9','#F07B1E']};
+
+let state = 'title', level = 0, swordLvl = 1;
+let hero, mons = [], parts = [], rocks = [], boss = null;
+let bigSpawned = false, toSpawn = 0, spawnT = 0, spawnSide = 1, doneT = 0, deadT = 0, bossDeadT = 0;
+let t = 0, shake = 0, flashT = 0, bannerT = 0;
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+const overlap = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+
+/* ---------- input ---------- */
+const keys = {left:false, right:false, up:false, swing:false};
+let jumpQ = false, swingQ = false;
+const KEYMAP = {ArrowLeft:'left', KeyA:'left', ArrowRight:'right', KeyD:'right', ArrowUp:'up', KeyW:'up', Space:'swing', KeyJ:'swing', KeyX:'swing'};
+function press(k){ if (!keys[k]) { if (k === 'up') jumpQ = true; if (k === 'swing') swingQ = true; } keys[k] = true; }
+addEventListener('keydown', e => {
+  if (e.target === nameEl) { if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); goBtn(); } return; }
+  if (!cardEl.hidden && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); if (!e.repeat) goBtn(); return; }
+  const k = KEYMAP[e.code]; if (!k) return;
+  e.preventDefault(); press(k);
+});
+addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) { keys[k] = false; e.preventDefault(); } });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+document.querySelectorAll('[data-k]').forEach(b => {
+  const k = b.dataset.k;
+  const on = e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (_) {} press(k); b.classList.add('on'); };
+  const off = () => { keys[k] = false; b.classList.remove('on'); };
+  b.addEventListener('pointerdown', on);
+  b.addEventListener('pointerup', off);
+  b.addEventListener('pointercancel', off);
+  b.addEventListener('lostpointercapture', off);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
+
+/* ---------- cards ---------- */
+const cardEl = document.getElementById('card');
+const cardBtn = document.getElementById('cardBtn');
+const nameBox = document.getElementById('nameBox');
+const nameEl = document.getElementById('heroName');
+let heroName = 'Hero';
+try { const saved = localStorage.getItem('heroName'); if (saved) { heroName = saved; nameEl.value = saved; } } catch (_) {}
+function readName(){
+  const v = nameEl.value.replace(/\s+/g, ' ').trim().slice(0, 12);
+  heroName = v || 'Hero';
+  try { localStorage.setItem('heroName', v); } catch (_) {}
+}
+let cardAction = null, lastGo = 0;
+function showCard(o, action){
+  document.getElementById('cardEyebrow').textContent = o.eyebrow || '';
+  document.getElementById('cardTitle').textContent = o.title || '';
+  document.getElementById('cardText').textContent = o.text || '';
+  cardBtn.textContent = o.btn;
+  cardEl.classList.toggle('top', !!o.top);
+  nameBox.hidden = !o.askName;
+  cardAction = action;
+  cardEl.hidden = false;
+  for (const k in keys) keys[k] = false;
+  lastGo = performance.now();
+  setTimeout(() => { try { (o.askName ? nameEl : cardBtn).focus({preventScroll:true}); } catch (_) {} }, 50);
+}
+function goBtn(){
+  const now = performance.now();
+  if (now - lastGo < 350) return;
+  lastGo = now;
+  if (!nameBox.hidden) readName();
+  cardEl.hidden = true;
+  const a = cardAction; cardAction = null;
+  if (a) a();
+}
+cardBtn.addEventListener('click', goBtn);
+
+/* ---------- setup ---------- */
+function newHero(){ return {x:W/2, y:GROUND, vx:0, vy:0, w:40, h:72, face:1, onG:true, swingT:0, cd:0, swingId:0, inv:0, hp:10, maxHp:10, walk:0, knockV:0, lightning:false}; }
+
+function startLevel(i, carryHp){
+  level = i; swordLvl = i + 1;
+  const L = LEVELS[i];
+  hero = newHero();
+  if (carryHp) hero.hp = carryHp; mons = []; parts = []; rocks = []; zaps = []; strikes = [];
+  spawnT = 50; spawnSide = 1; bigSpawned = false; doneT = 0; deadT = 0; bossDeadT = 0;
+  if (L.type === 'boss') { boss = makeBoss(); toSpawn = 0; hero.x = 170; }
+  else { boss = null; toSpawn = L.count; }
+  bannerT = 130;
+  state = 'play';
+}
+
+// Element powers: you get the power of each level you beat
+const hasIce = () => level >= 1, hasRock = () => level >= 2, hasZap = () => level >= 3;
+let zaps = [], strikes = [];
+function powerNames(){ return ['Ice', 'Rock', 'Lightning'].slice(0, Math.min(3, level)); }
+
+function makeBoss(){
+  const R = [];
+  const shades = ['#8A8F98','#7A7F88','#9AA0A8','#6E737C','#A3A8B0'];
+  const add = (dx, dy, r, core) => R.push({dx, dy, r, c:pick(shades), core:!!core});
+  // legs
+  add(-48,-24,28,1); add(48,-24,28,1); add(-46,-64,24); add(46,-64,24);
+  // body: rings of rocks around a core
+  add(0,-125,48,1);
+  for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add(Math.cos(a) * 62, -125 + Math.sin(a) * 50, rand(20, 26)); }
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + .4; add(Math.cos(a) * 32, -125 + Math.sin(a) * 26, rand(18, 22)); }
+  // arms and fists
+  for (const s of [-1, 1]) { add(s*100,-150,24); add(s*114,-114,22); add(s*120,-74,30); }
+  // head
+  add(0,-200,38,1); add(-32,-196,18); add(32,-196,18); add(-14,-232,18); add(16,-230,20);
+  return {x:W - 210, y:GROUND, hp:30, maxHp:30, throwT:110, wind:0, stompNext:false, flash:0, knock:0, step:0, face:-1, rocks:R, hitBy:-1, dead:false};
+}
+
+/* ---------- particles ---------- */
+function burst(x, y, cols, n, power = 6){
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, Math.PI * 2), s = rand(1, power);
+    parts.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 2, life:rand(28, 50), max:50, c:pick(cols), s:rand(3, 7), g:.3});
+  }
+}
+
+/* ---------- background bits ---------- */
+const flakes = Array.from({length:70}, () => ({x:rand(0,W), y:rand(0,H), s:rand(1.5,4), v:rand(.5,1.5), p:rand(0,6)}));
+const stars = Array.from({length:60}, () => ({x:rand(0,W), y:rand(0,GROUND-160), r:rand(1,2.4), p:rand(0,6)}));
+const FAR = [[60,380,190],[300,440,230],[560,420,200],[830,460,240]];
+const NEAR = [[-20,300,120],[190,360,160],[470,420,185],[730,380,150],[960,360,170]];
+
+/* ---------- update ---------- */
+function update(){
+  t++;
+  if (shake > 0) shake *= .85; if (shake < .3) shake = 0;
+  if (flashT > 0) flashT--;
+  if (bannerT > 0 && state === 'play') bannerT--;
+  for (const f of flakes) { f.y += f.v; f.x += Math.sin(t * .02 + f.p) * .4; if (f.y > H) { f.y = -5; f.x = rand(0, W); } }
+  for (const p of parts) { p.vy += p.g; p.x += p.vx; p.y += p.vy; p.vx *= .98; p.life--; if (p.y > GROUND + 6 && p.g) { p.y = GROUND + 6; p.vy *= -.35; p.vx *= .7; } }
+  parts = parts.filter(p => p.life > 0);
+  if (LEVELS[level].fx === 'storm' && Math.random() < .004) flashT = 9;
+
+  if (state === 'play') updatePlay();
+  if (state === 'win' && t % 3 === 0) {
+    const tipX = hero.x + 8, tipY = hero.y - 46 - 16 - 92;
+    parts.push({x:tipX + rand(-14,14), y:tipY + rand(-10,40), vx:rand(-1.5,1.5), vy:rand(-2,-.5), life:40, max:40, c:pick([C.yellow, C.cream, '#FFFFFF']), s:rand(2,5), g:0});
+  }
+}
+
+// Landing on top of something bounces you up: no damage to you or to it
+function tryBounce(top, target){
+  const h = hero;
+  if (h.vy <= 0 || h.y - h.vy > top + 26) return false;
+  h.y = Math.min(h.y, top); h.vy = keys.up ? -14 : -11; h.onG = false; h.jumps = 1;
+  // jumping on a monster does a little damage (1)
+  if (target) {
+    target.hp -= 1; target.flash = 6;
+    if (target.hp <= 0) { target.dead = true; burst(target.x, target.y - target.h / 2, PCOL[target.type], target.big ? 70 : 26, target.big ? 11 : 8); shake = Math.max(shake, target.big ? 14 : 5); }
+  }
+  // a little safe time, and nearby monsters get pushed back (no damage)
+  h.safe = 40;
+  for (const m of mons) {
+    const dx = m.x - h.x;
+    if (Math.abs(dx) < 140) { m.knock = (dx < 0 ? -1 : 1) * (m.big ? 5 : 10); m.wind = 0; m.dash = 0; }
+  }
+  burst(h.x, top, ['#FFFFFF', C.cream, C.yellow], 8, 3);
+  return true;
+}
+
+function hurtHero(srcX){
+  if (hero.inv > 0 || hero.hp <= 0) return;
+  hero.hp--; hero.inv = 80; hero.vy = -7; hero.onG = false;
+  hero.knockV = (hero.x < srcX ? -1 : 1) * 8; shake = 9;
+  burst(hero.x, hero.y - 40, ['#FF6B5B', '#FFFFFF'], 10, 4);
+  if (hero.hp <= 0) deadT = 50;
+}
+
+function updatePlay(){
+  const L = LEVELS[level];
+  const h = hero;
+
+  // hero
+  const ax = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  if (hero.hp > 0) {
+    if (ax) h.face = ax;
+    h.x += ax * 5.2;
+    if (jumpQ && h.onG) { h.vy = -14; h.onG = false; h.jumps = 1; }
+    else if (jumpQ && (h.jumps || 0) < 2) { h.vy = -12.5; h.jumps = 2; burst(h.x, h.y, ['#FFFFFF', C.sky, C.cream], 10, 3); }
+    if (swingQ && h.swingT === 0 && h.cd === 0) { h.swingT = 18; h.cd = 14; h.swingId++; }
+  }
+  jumpQ = false; swingQ = false;
+  if (h.knockV) { h.x += h.knockV; h.knockV *= .85; if (Math.abs(h.knockV) < .5) h.knockV = 0; }
+  h.vy += .7; h.y += h.vy;
+  if (h.y >= GROUND) { h.y = GROUND; h.vy = 0; h.onG = true; }
+  h.x = clamp(h.x, 24, W - 24);
+  if (ax && h.onG) h.walk += .28; else h.walk *= .8;
+  if (h.inv > 0) h.inv--;
+  if (h.safe > 0) h.safe--;
+  if (h.swingT > 0) { h.swingT--; if (h.swingT <= 14 && h.swingT >= 5) doHits(); }
+  else if (h.cd > 0) h.cd--;
+
+  // spawning
+  if (toSpawn > 0) {
+    spawnT--;
+    if (spawnT <= 0 && mons.length < L.maxAlive) {
+      const d = MON[L.type], side = spawnSide; spawnSide *= -1;
+      mons.push({type:L.type, x: side > 0 ? W + 40 : -40, y:GROUND, vy:0, w:d.w, h:d.h, hp:d.hp, speed:d.speed * rand(.85, 1.15),
+        knock:0, flash:0, hop:rand(40, 100), phase:rand(0, 6), atk:rand(90, 200), wind:0, dash:0, hitBy:-1, onG:true, face:-side});
+      toSpawn--; spawnT = rand(70, 130);
+    }
+  } else if (!bigSpawned && mons.length === 0 && L.type === 'rock') {
+    boss = makeBoss(); if (hero.x > W / 2) boss.x = 210;
+    bigSpawned = true; bannerT = 130; shake = 10; hero.hp = hero.maxHp; burst(hero.x, hero.y - 50, ['#F2493A', '#FFFFFF', '#FFCB2E'], 24, 5);
+  } else if (!bigSpawned && mons.length === 0 && L.type !== 'boss') {
+    const zb = L.type === 'zap', d = MON[L.type], sc = zb ? 3 : 2.2, side = hero.x < W / 2 ? 1 : -1;
+    mons.push({type:L.type, big:true, sc, x: side > 0 ? W + 70 : -70, y:GROUND, vy:0, w:(zb ? 40 : d.w) * sc, h:d.h * sc, hp:BIG[L.type].hp, maxHp:BIG[L.type].hp,
+      speed:d.speed * .8, knock:0, flash:0, hop:rand(60, 90), phase:0, atk:rand(80, 120), wind:0, dash:0, shots:0, shotT:0, hitBy:-1, onG:true, face:-side});
+    bigSpawned = true; bannerT = 130; shake = 8; hero.hp = hero.maxHp; burst(hero.x, hero.y - 50, ['#F2493A', '#FFFFFF', '#FFCB2E'], 24, 5);
+  }
+
+  // monsters
+  const hb = {l:h.x - 15, r:h.x + 15, t:h.y - h.h + 8, b:h.y};
+  for (const m of mons) {
+    const dir = Math.sign(h.x - m.x) || 1; m.face = dir;
+    const dist = Math.abs(h.x - m.x), onScreen = m.x > 20 && m.x < W - 20;
+    if (m.iceCd > 0) m.iceCd--;
+    if (m.frozen > 0) { m.frozen--; m.wind = 0; m.dash = 0; m.shots = 0; if (m.knock) { m.x += m.knock; m.knock *= .82; if (Math.abs(m.knock) < .4) m.knock = 0; } }
+    else if (m.knock) { m.x += m.knock; m.knock *= .82; if (Math.abs(m.knock) < .4) m.knock = 0; if (!(m.big && m.type === 'zap')) m.wind = 0; }
+    else if (m.dash > 0) { m.dash--; m.x += m.dashDir * (m.big ? 9 : 7.5); }
+    else if (m.shots > 0) { if (--m.shotT <= 0) { shootIce(m, dir); m.shots--; m.shotT = 26; } }
+    else if (m.wind > 0) {
+      // getting ready to attack: stand still and shake
+      if (--m.wind === 0) {
+        if (m.type === 'rock') { m.dash = m.big ? 40 : 34; m.dashDir = dir; }
+        if (m.type === 'ice') { shootIce(m, dir); if (m.big) { m.shots = 2; m.shotT = 26; } }
+        if (m.type === 'zap' && m.big) callLightning(m);
+      }
+    }
+    else {
+      if (dist > 6) m.x += dir * m.speed;
+      if (onScreen && --m.atk <= 0) {
+        if (m.type === 'rock' && dist < (m.big ? 560 : 330) && dist > 70) { m.wind = m.big ? 34 : 40; m.atk = m.big ? rand(110, 170) : rand(150, 240); }
+        else if (m.type === 'ice' && dist > 110) { m.wind = 30; m.atk = m.big ? rand(120, 170) : rand(130, 220); }
+        else if (m.type === 'zap' && m.big && m.onG) { m.wind = 38; m.atk = m.hp < m.maxHp / 2 ? rand(120, 160) : rand(170, 230); }
+        else m.atk = 30;
+      }
+    }
+    m.vy += .6; m.y += m.vy;
+    if (m.y >= GROUND) {
+      if (!m.onG && m.big && m.type === 'zap') {
+        for (const dd of [-1, 1]) rocks.push({kind:'wave', c:C.yellow, x:m.x + dd * 64, y:GROUND - 14, vx:dd * 6, vy:0, r:16, rot:0, g:0});
+        shake = 8; burst(m.x, GROUND - 4, PCOL.zap, 14);
+      }
+      m.y = GROUND; m.vy = 0; m.onG = true;
+    } else m.onG = false;
+    if (m.type === 'zap' && m.onG && !m.frozen && !(m.big && m.wind > 0) && --m.hop <= 0) {
+      // lightning monsters leap right at you
+      if (m.big) { m.vy = rand(-15, -12); m.hop = m.hp < m.maxHp / 2 ? rand(60, 85) : rand(80, 115); m.knock = dir * Math.min(15, dist / 10); }
+      else { m.vy = rand(-13, -10); m.hop = rand(45, 90); if (dist < 300) m.knock = dir * Math.min(14, dist / 12); }
+    }
+    if (m.flash > 0) m.flash--;
+    m.phase += .1;
+    const mb = {l:m.x - m.w/2 + 7, r:m.x + m.w/2 - 7, t:m.y - m.h + 8, b:m.y};
+    if (overlap(hb, mb) && !tryBounce(m.y - m.h, m) && !hero.safe && !m.frozen) hurtHero(m.x);
+  }
+  mons = mons.filter(m => !m.dead);
+  // keep monsters from piling up on the same spot
+  for (let i = 0; i < mons.length; i++) for (let j = i + 1; j < mons.length; j++) {
+    const a = mons[i], c = mons[j], gap = (a.w + c.w) * .45, dx = c.x - a.x;
+    if (Math.abs(dx) < gap) { const push = (gap - Math.abs(dx)) / 2 * (dx < 0 ? -1 : 1) || 1; a.x -= push; c.x += push; }
+  }
+
+  // boss
+  if (boss && !boss.dead) {
+    const b = boss, d = h.x - b.x;
+    if (b.iceCd > 0) b.iceCd--;
+    if (b.frozen > 0) { b.frozen--; if (b.flash > 0) b.flash--; }
+    else {
+    b.face = Math.sign(d) || 1;
+    if (b.knock) { b.x += b.knock; b.knock *= .8; if (Math.abs(b.knock) < .3) b.knock = 0; }
+    else if (Math.abs(d) > 150) { b.x += Math.sign(d) * (b.hp < b.maxHp / 2 ? 1.2 : .9); b.step += .08; }
+    b.x = clamp(b.x, 120, W - 120);
+    if (b.flash > 0) b.flash--;
+    const angry = b.hp < b.maxHp / 2;
+    if (b.wind > 0) {
+      if (--b.wind === 0) {
+        for (const dir of [-1, 1]) rocks.push({kind:'wave', x:b.x + dir * 100, y:GROUND - 14, vx:dir * (angry ? 7 : 6), vy:0, r:16, rot:0, g:0});
+        shake = 12; burst(b.x, GROUND - 4, PCOL.rock, 20);
+      }
+    } else if (--b.throwT <= 0) {
+      if (b.stompNext) { b.wind = 45; }
+      else { throwRock(b, 0); if (angry) throwRock(b, rand(-120, 120)); }
+      b.stompNext = !b.stompNext;
+      b.throwT = angry ? 80 : 115;
+    }
+    }
+    if (overlap(hb, {l:b.x - 88, r:b.x + 88, t:b.y - 215, b:b.y})) {
+      // jump on his head: you bounce and he takes damage
+      if (tryBounce(b.y - 215, null)) stompBoss(2);
+      else if (!b.frozen) hurtHero(b.x);
+    }
+  }
+  if (boss && boss.dead && bossDeadT > 0 && --bossDeadT === 0) { boss = null; levelDone(); }
+
+  // thrown rocks
+  for (const r of rocks) {
+    r.vy += r.g; r.x += r.vx; r.y += r.vy; r.rot += r.vx * .05;
+    const col = r.kind === 'ice' ? PCOL.ice : PCOL.rock;
+    if (overlap(hb, {l:r.x - r.r + 4, r:r.x + r.r - 4, t:r.y - r.r + 4, b:r.y + r.r - 4}) && (r.kind === 'rock' || !tryBounce(r.kind === 'wave' ? GROUND - 34 : r.y - r.r))) { hurtHero(r.x - r.vx * 10); if (r.kind !== 'wave') { r.dead = true; burst(r.x, r.y, col, 10); } }
+    else if (r.kind === 'rock' && r.y >= GROUND - r.r) { r.dead = true; burst(r.x, GROUND - 6, col, 12); shake = Math.max(shake, 4); }
+    else if (r.x < -40 || r.x > W + 40) r.dead = true;
+  }
+  rocks = rocks.filter(r => !r.dead);
+  // lightning strikes called down by Teddy's lightning boss: a warning mark first, then the bolt
+  if (!mons.some(m => m.big && m.type === 'zap')) strikes = strikes.filter(s => s.t <= 0);
+  for (const s of strikes) {
+    if (s.t > 0) {
+      if (--s.t === 0) {
+        s.life = 16; flashT = Math.max(flashT, 6); shake = Math.max(shake, 8); burst(s.x, GROUND - 6, PCOL.zap, 16);
+        if (Math.abs(hero.x - s.x) < 38 && !hero.safe) hurtHero(s.x);
+      }
+    } else s.life--;
+  }
+  strikes = strikes.filter(s => s.t > 0 || s.life > 0);
+  for (const z of zaps) z.life--;
+  zaps = zaps.filter(z => z.life > 0);
+
+  // level done?
+  if (L.type !== 'boss' && bigSpawned && !boss && toSpawn === 0 && mons.length === 0 && hero.hp > 0) {
+    if (++doneT === 50) levelDone();
+  }
+  if (deadT > 0 && --deadT === 0) {
+    state = 'card';
+    showCard({eyebrow:'Ouch!', title:'Out of hearts', text:'Try this level again. You can do it!', btn:'Try again'}, () => startLevel(level));
+  }
+}
+
+function stompBoss(dmg){
+  const b = boss;
+  b.hp -= dmg; b.flash = 8; shake = Math.max(shake, 6);
+  const loose = b.rocks.filter(r => !r.core);
+  if (loose.length > 6) {
+    const r = pick(loose); b.rocks.splice(b.rocks.indexOf(r), 1);
+    parts.push({x:b.x + r.dx, y:b.y + r.dy, vx:rand(-6, 6), vy:rand(-9, -4), life:70, max:70, c:r.c, s:r.r * .7, g:.45, rock:true});
+  }
+  burst(b.x, b.y - 220, PCOL.rock, 12);
+  if (b.hp <= 0) {
+    b.dead = true; bossDeadT = 110; shake = 16; rocks = [];
+    for (const r of b.rocks) parts.push({x:b.x + r.dx, y:b.y + r.dy, vx:rand(-7, 7), vy:rand(-12, -3), life:rand(80, 110), max:110, c:r.c, s:r.r * .8, g:.45, rock:true});
+    b.rocks = [];
+  }
+}
+
+function shootIce(m, dir){
+  rocks.push({kind:'ice', x:m.x + dir * m.w / 2, y:m.y - (m.big ? 34 : 30), vx:dir * (m.big ? 6.5 : 6), vy:0, r:m.big ? 15 : 12, rot:0, g:0});
+}
+
+// the lightning boss lifts his bolt and lightning comes down where you are standing (three bolts when he is angry)
+function callLightning(m){
+  const offs = m.hp < m.maxHp / 2 ? [0, -150, 150] : [0];
+  for (const o of offs) strikes.push({x:clamp(hero.x + o, 30, W - 30), t:50, life:0});
+}
+
+function throwRock(b, off){
+  const x0 = b.x + b.face * 40, y0 = b.y - 200, T = 62, g = .4, r = 17;
+  const vx = (clamp(hero.x + off, 20, W - 20) - x0) / T;
+  const vy = ((GROUND - r) - y0 - .5 * g * T * T) / T;
+  rocks.push({kind:'rock', g, x:x0, y:y0, vx, vy, r, rot:0, c:pick(['#8A8F98','#7A7F88','#9AA0A8'])});
+}
+
+function doHits(){
+  const h = hero, reach = 24 + SWORD[swordLvl].len;
+  const box = {l:h.x - reach, r:h.x + reach, t:h.y - h.h - 34, b:h.y + 4};
+  for (const m of mons) {
+    if (m.hitBy === h.swingId || m.dead) continue;
+    if (!overlap(box, {l:m.x - m.w/2, r:m.x + m.w/2, t:m.y - m.h, b:m.y})) continue;
+    m.hitBy = h.swingId; m.hp -= swordLvl + (hasRock() ? 1 : 0); m.flash = 8;
+    m.knock = (m.x < h.x ? -1 : 1) * (m.big ? 4 : 10) * (hasRock() ? 1.6 : 1);
+    burst(m.x, m.y - m.h / 2, PCOL[m.type], 8);
+    if (hasRock()) burst(m.x, m.y - m.h / 2, PCOL.rock, 6);
+    if (m.hp <= 0) { m.dead = true; burst(m.x, m.y - m.h / 2, PCOL[m.type], m.big ? 70 : 26, m.big ? 11 : 8); shake = Math.max(shake, m.big ? 14 : 5); }
+    else if (hasIce() && !(m.iceCd > 0)) { m.frozen = m.big ? 120 : 180; m.iceCd = m.frozen + (m.big ? 200 : 60); burst(m.x, m.y - m.h / 2, PCOL.ice, 12); }
+    if (hasZap()) chainZap(m.x, m.y - m.h / 2, m);
+  }
+  for (const r of rocks) {
+    if (r.kind !== 'wave' && overlap(box, {l:r.x - r.r, r:r.x + r.r, t:r.y - r.r, b:r.y + r.r})) { r.dead = true; burst(r.x, r.y, r.kind === 'ice' ? PCOL.ice : PCOL.rock, 12); }
+  }
+  const b = boss;
+  if (b && !b.dead && b.hitBy !== h.swingId && overlap(box, {l:b.x - 95, r:b.x + 95, t:b.y - 250, b:b.y})) {
+    b.hitBy = h.swingId; b.hp -= swordLvl + (hasRock() ? 1 : 0); b.flash = 8; b.knock = (b.x < h.x ? -1 : 1) * (hasRock() ? 8 : 5); shake = Math.max(shake, 5);
+    if (hasIce() && !(b.iceCd > 0)) { b.frozen = 90; b.wind = 0; b.iceCd = 90 + 240; burst(b.x, b.y - 130, PCOL.ice, 20); }
+    if (hasZap()) chainZap(b.x, b.y - 130, null);
+    // knock rocks off him
+    for (let i = 0; i < 2; i++) {
+      const loose = b.rocks.filter(r => !r.core);
+      if (loose.length > 6) {
+        const r = pick(loose); b.rocks.splice(b.rocks.indexOf(r), 1);
+        parts.push({x:b.x + r.dx * b.face * -1, y:b.y + r.dy, vx:rand(-6, 6), vy:rand(-9, -4), life:70, max:70, c:r.c, s:r.r * .7, g:.45, rock:true});
+      }
+    }
+    burst(b.x, b.y - 130, PCOL.rock, 10);
+    if (b.hp <= 0) {
+      b.dead = true; bossDeadT = 110; shake = 16; rocks = [];
+      for (const r of b.rocks) parts.push({x:b.x + r.dx, y:b.y + r.dy, vx:rand(-7, 7), vy:rand(-12, -3), life:rand(80, 110), max:110, c:r.c, s:r.r * .8, g:.45, rock:true});
+      b.rocks = [];
+    }
+  }
+}
+
+// lightning power: a bolt jumps from the monster you hit to the next closest monster (or a flying rock)
+function chainZap(x, y, from){
+  let best = null, bd = 340;
+  for (const m of mons) { if (m === from || m.dead) continue; const d = Math.hypot(m.x - x, m.y - m.h / 2 - y); if (d < bd) { bd = d; best = m; } }
+  if (best) {
+    zaps.push({x1:x, y1:y, x2:best.x, y2:best.y - best.h / 2, life:14});
+    best.hp -= 1; best.flash = 8; burst(best.x, best.y - best.h / 2, PCOL.zap, 10);
+    if (best.hp <= 0) { best.dead = true; burst(best.x, best.y - best.h / 2, PCOL[best.type], best.big ? 70 : 26, 8); }
+    return;
+  }
+  for (const r of rocks) {
+    if (r.kind === 'wave' || r.dead) continue;
+    const d = Math.hypot(r.x - x, r.y - y);
+    if (d < bd) { bd = d; best = r; }
+  }
+  if (best) { zaps.push({x1:x, y1:y, x2:best.x, y2:best.y, life:14}); best.dead = true; burst(best.x, best.y, PCOL.zap, 10); }
+}
+
+function levelDone(){
+  state = 'card';
+  const next = level + 1;
+  const hp = Math.min(hero.maxHp, hero.hp + 2);
+  if (!LEVELS[next]) { winGame(); return; }
+  if (LEVELS[next].type === 'boss') {
+    showCard({eyebrow:'You beat the ' + BIG[LEVELS[level].type].name.toLowerCase() + '!', title:'Your swords leveled up!', text:"You got the lightning power! Your swords zap the next closest monster. Now the final boss: the giant rock monster. He's made out of rocks. You get all your hearts back. Jump over his stomps!", btn:'Fight!'}, () => startLevel(next));
+  } else {
+    showCard({eyebrow:'You beat the ' + BIG[LEVELS[level].type].name.toLowerCase() + '!', title:'Your swords leveled up!', text:(next === 1 ? 'You got the ice power! Your swords freeze monsters for a few seconds.' : 'You got the rock power! Your swords hit harder and knock monsters way back.') + ' You get 2 hearts back.', btn:'Go!'}, () => startLevel(next, hp));
+  }
+}
+
+function winGame(){
+  state = 'win';
+  hero.x = W / 2; hero.y = GROUND; hero.face = 1; hero.swingT = 0; hero.inv = 0; hero.lightning = true; hero.walk = 0;
+  showCard({eyebrow:'You beat the big lightning monster!', title:heroName + ' got the lightning sword!', text:'The most powerful sword.', btn:'Play again', top:true}, () => startLevel(0));
+}
+
+/* ---------- drawing ---------- */
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+
+function mountain(cx, w, ht, color, cap){
+  const base = GROUND;
+  ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(cx - w/2, base); ctx.lineTo(cx, base - ht); ctx.lineTo(cx + w/2, base); ctx.fill();
+  if (cap) {
+    const f = .28, cw = w / 2 * f, ch = ht * f, top = base - ht;
+    ctx.fillStyle = C.cream; ctx.beginPath();
+    ctx.moveTo(cx, top); ctx.lineTo(cx + cw, top + ch); ctx.lineTo(cx + cw * .4, top + ch * .78);
+    ctx.lineTo(cx, top + ch); ctx.lineTo(cx - cw * .4, top + ch * .78); ctx.lineTo(cx - cw, top + ch); ctx.closePath(); ctx.fill();
+  }
+}
+
+function drawBg(L){
+  const g = ctx.createLinearGradient(0, 0, 0, GROUND);
+  g.addColorStop(0, L.sky[0]); g.addColorStop(1, L.sky[1]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (L.fx === 'stars' || L.fx === 'storm') for (const s of stars) {
+    ctx.globalAlpha = .5 + .5 * Math.sin(t * .05 + s.p); ctx.fillStyle = C.cream;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  for (const m of FAR) mountain(m[0], m[1], m[2], L.type === 'zap' ? '#B35A16' : '#F7A65E', false);
+  for (const m of NEAR) mountain(m[0], m[1], m[2], C.orange, true);
+  ctx.fillStyle = L.ground; ctx.fillRect(0, GROUND, W, H - GROUND);
+  ctx.fillStyle = L.edge; ctx.fillRect(0, GROUND, W, 6);
+  ctx.fillStyle = C.yellow;
+  for (let x = 14; x < W; x += 30) { ctx.beginPath(); ctx.arc(x, GROUND + 36, 5, 0, 7); ctx.fill(); }
+  if (L.fx === 'snow') { ctx.fillStyle = '#FFFFFF'; for (const f of flakes) { ctx.beginPath(); ctx.arc(f.x, f.y, f.s, 0, 7); ctx.fill(); } }
+}
+
+function drawSword(a, lvl, lightning){
+  const S = SWORD[lvl];
+  ctx.save(); ctx.rotate(a);
+  if (lightning) {
+    const L = 92;
+    ctx.shadowColor = C.yellow; ctx.shadowBlur = 22 + Math.sin(t * .3) * 6;
+    ctx.fillStyle = C.yellow; ctx.strokeStyle = C.orange; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(8, -6); ctx.lineTo(L * .35, -9); ctx.lineTo(L * .45, -2); ctx.lineTo(L * .7, -8); ctx.lineTo(L * .78, -1);
+    ctx.lineTo(L + 14, 0); ctx.lineTo(L * .72, 7); ctx.lineTo(L * .62, 1); ctx.lineTo(L * .4, 8); ctx.lineTo(L * .3, 2); ctx.lineTo(8, 6); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.fillStyle = C.cream;
+    ctx.beginPath(); ctx.moveTo(12, -2); ctx.lineTo(L * .6, -3); ctx.lineTo(L * .9, 0); ctx.lineTo(12, 1); ctx.fill();
+  } else {
+    const L = S.len;
+    if (S.glow) { ctx.shadowColor = S.glow; ctx.shadowBlur = 8 + lvl * 3; }
+    ctx.fillStyle = S.blade; ctx.strokeStyle = '#5B6B82'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(8, -4.5); ctx.lineTo(L, -4.5); ctx.lineTo(L + 11, 0); ctx.lineTo(L, 4.5); ctx.lineTo(8, 4.5); ctx.closePath();
+    ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+    ctx.strokeStyle = 'rgba(91,107,130,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(L, 0); ctx.stroke();
+  }
+  ctx.fillStyle = C.yellow; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+  rr(3, -11, 6, 22, 3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7A4A2A'; rr(-10, -3.5, 14, 7, 3); ctx.fill();
+  ctx.restore();
+}
+
+function drawHero(h){
+  ctx.save(); ctx.translate(h.x, h.y);
+  if (h.inv > 0 && Math.floor(h.inv / 5) % 2 === 0) ctx.globalAlpha = .45;
+  ctx.fillStyle = 'rgba(28,43,74,.25)'; ctx.beginPath(); ctx.ellipse(0, 2, 22, 5, 0, 0, 7); ctx.fill();
+  ctx.scale(h.face, 1);
+  const p = h.swingT > 0 ? 1 - h.swingT / 18 : -1;
+  const e = p >= 0 ? 1 - Math.pow(1 - p, 3) : 0;
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const fa = h.lightning ? -Math.PI / 2 - .15 : (p >= 0 ? lerp(-2.2, .9, e) : -1.1 + Math.sin(t * .06) * .05);
+  const ba = h.lightning ? -2.3 : (p >= 0 ? lerp(-.94, -4.04, e) : -2.04 - Math.sin(t * .06) * .05);
+  const len = SWORD[swordLvl].len;
+
+  const arm = (sx, sy, a, lightning) => {
+    const hx = sx + Math.cos(a) * 15, hy = sy + Math.sin(a) * 15;
+    if (p >= 0 && !h.lightning) {
+      ctx.save(); ctx.globalAlpha *= .35; ctx.strokeStyle = SWORD[swordLvl].glow || '#FFFFFF'; ctx.lineWidth = 14; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(sx, sy, 15 + len, a - (a > -2.5 && sx > 0 ? .9 : -.9), a, sx < 0); ctx.stroke(); ctx.restore();
+    }
+    ctx.strokeStyle = '#F1C27D'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.save(); ctx.translate(hx, hy); drawSword(a, swordLvl, lightning); ctx.restore();
+  };
+
+  arm(-7, -48, ba, false);
+  // legs
+  const st = Math.sin(h.walk) * 9;
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-6, -28); ctx.lineTo(-6 + st, -4); ctx.moveTo(6, -28); ctx.lineTo(6 - st, -4); ctx.stroke();
+  ctx.fillStyle = C.orange;
+  rr(-12 + st, -7, 14, 8, 4); ctx.fill(); rr(0 - st, -7, 14, 8, 4); ctx.fill();
+  // body
+  ctx.fillStyle = C.blue; rr(-16, -58, 32, 34, 9); ctx.fill();
+  ctx.fillStyle = C.yellow; ctx.fillRect(-16, -32, 32, 5);
+  // head
+  ctx.fillStyle = '#F1C27D'; ctx.beginPath(); ctx.arc(2, -72, 15, 0, 7); ctx.fill();
+  ctx.fillStyle = '#6B4423'; ctx.beginPath(); ctx.arc(1, -75, 15, Math.PI * 1.02, Math.PI * 2.05); ctx.fill();
+  ctx.fillStyle = C.orange; ctx.fillRect(-13, -79, 30, 5);
+  ctx.beginPath(); ctx.moveTo(-12, -78); ctx.lineTo(-22, -84 + Math.sin(t * .2) * 2); ctx.lineTo(-21, -73); ctx.fill();
+  ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(9, -70, 2.4, 0, 7); ctx.fill();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(8, -65, 4, .2, 1.6); ctx.stroke();
+  arm(7, -48, fa, h.lightning);
+  ctx.restore();
+  if (state !== 'title') { ctx.save(); ctx.globalAlpha = .95; label(heroName, h.x, h.y - 108, 18, 'center', C.cream); ctx.restore(); }
+}
+
+function eyes(x1, x2, y, angry, look){
+  for (const x of [x1, x2]) {
+    ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(x + look, y + 1, 3, 0, 7); ctx.fill();
+  }
+  if (angry) {
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1 - 6, y - 10); ctx.lineTo(x1 + 5, y - 6); ctx.moveTo(x2 + 6, y - 10); ctx.lineTo(x2 - 5, y - 6); ctx.stroke();
+  }
+}
+
+function iceBlock(l, t2, w, h){
+  ctx.save(); ctx.fillStyle = 'rgba(207,239,255,.6)'; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 3;
+  rr(l, t2, w, h, 8); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.moveTo(l + 8, t2 + 14); ctx.lineTo(l + 20, t2 + 6); ctx.moveTo(l + 8, t2 + 26); ctx.lineTo(l + 30, t2 + 8); ctx.stroke();
+  ctx.restore();
+}
+
+function drawMon(m){
+  ctx.save(); ctx.translate(m.x + (m.wind > 0 ? Math.sin(t * 1.7) * 2.5 : 0), m.y);
+  if (m.wind > 0) label('!', 0, -m.h - 26, 30, 'center', C.yellow);
+  const sc = m.sc || 1;
+  ctx.scale(m.face * sc, sc);
+  const w = m.w / sc, h = m.h / sc, fl = m.flash > 0;
+  ctx.fillStyle = 'rgba(28,43,74,.2)'; ctx.beginPath(); ctx.ellipse(0, 2, w * .45, 5, 0, 0, 7); ctx.fill();
+  if (m.type === 'ice' && m.big) {
+    teddyIce(Math.sin(m.phase) * 1.2, fl);
+  } else if (m.type === 'ice') {
+    const bob = Math.sin(m.phase) * 2;
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#5FA8D9'; ctx.lineWidth = 3;
+    for (const [x, hh] of [[-14, 16], [0, 22], [14, 16]]) {
+      ctx.beginPath(); ctx.moveTo(x - 8, -h + 14 + bob); ctx.lineTo(x, -h - hh + 14 + bob); ctx.lineTo(x + 8, -h + 14 + bob); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = fl ? '#FFFFFF' : '#CFEFFF';
+    ctx.beginPath(); ctx.moveTo(-w/2, 0); ctx.quadraticCurveTo(-w/2 - 6, -h + bob, 0, -h + 4 + bob); ctx.quadraticCurveTo(w/2 + 6, -h + bob, w/2, 0); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    eyes(-2, 13, -h * .55 + bob, true, 2);
+    ctx.strokeStyle = '#2F6E9E'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-2, -16); ctx.lineTo(3, -20); ctx.lineTo(8, -16); ctx.lineTo(13, -20); ctx.stroke();
+  } else if (m.type === 'rock') {
+    const wob = Math.sin(m.phase * 1.4) * 1.5;
+    ctx.fillStyle = fl ? '#FFFFFF' : '#8D939C'; ctx.strokeStyle = '#4B5058'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    const pts = [[-w/2, -4], [-w/2 + 4, -h * .6], [-w * .2, -h + wob], [w * .15, -h - 2 + wob], [w/2 - 2, -h * .7], [w/2, -6], [w * .2, 0], [-w * .25, 0]];
+    pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(75,80,88,.35)';
+    ctx.beginPath(); ctx.arc(-14, -16, 6, 0, 7); ctx.arc(-4, -h + 14, 4, 0, 7); ctx.fill();
+    eyes(2, 18, -h * .55, true, 2);
+    ctx.fillStyle = C.ink; rr(2, -18, 18, 5, 2); ctx.fill();
+  } else if (m.big) {
+    teddyZap(Math.sin(m.phase) * 1.3, fl, m.wind > 0);
+  } else {
+    const cy = -h / 2;
+    ctx.save(); ctx.translate(0, cy); ctx.rotate(t * .05);
+    ctx.strokeStyle = C.orange; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+    for (let i = 0; i < 6; i++) {
+      ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(28, -6); ctx.lineTo(28, 4); ctx.lineTo(38, -2); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.shadowColor = C.yellow; ctx.shadowBlur = 18;
+    ctx.fillStyle = fl ? '#FFFFFF' : C.yellow; ctx.strokeStyle = C.orange; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, cy, 22, 0, 7); ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+    eyes(-4, 11, cy - 4, true, 2);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(4, cy + 12, 6, Math.PI + .3, -.3); ctx.stroke();
+  }
+  if (m.big) {
+    const cy = m.type === 'ice' ? -76 : m.type === 'zap' ? -61 + Math.sin(m.phase) * 1.3 : -h - 4;
+    ctx.fillStyle = C.yellow; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-12, cy); ctx.lineTo(-12, cy - 10); ctx.lineTo(-6, cy - 5); ctx.lineTo(0, cy - 13); ctx.lineTo(6, cy - 5); ctx.lineTo(12, cy - 10); ctx.lineTo(12, cy); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Teddy's own drawing: the lightning boss (dark storm cloud, angry gold eyebrows, blue eyes, gold tornado tail, strong arms, a lightning bolt in his fist)
+function teddyZap(bob, fl, casting){
+  const GOLD = fl ? '#FFFFFF' : '#D9AE30', ARM = fl ? '#FFFFFF' : '#B8782A', DARK = fl ? '#8A8F9C' : '#15161B';
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  // tornado tail: wide under the cloud, swirling down to a point on the ground
+  const sw = Math.sin(t * .09) * 2;
+  ctx.fillStyle = GOLD; ctx.strokeStyle = '#8F6E14'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-12, -34 + bob); ctx.lineTo(13, -33 + bob);
+  ctx.quadraticCurveTo(17 + sw, -16, -8 - sw, 0); ctx.quadraticCurveTo(-3 + sw, -13, -5, -19); ctx.quadraticCurveTo(-11, -24, -12, -34 + bob);
+  ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(143,110,20,.55)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-8, -27 + bob); ctx.quadraticCurveTo(3, -23, 12, -25 + bob); ctx.moveTo(-4, -16); ctx.quadraticCurveTo(3, -13, 8 + sw, -15); ctx.stroke();
+  // the bolt he holds, with its own little cloud on top
+  const bolt = [[-35,-70],[-39,-62],[-34,-58],[-40,-52],[-35,-48],[-40,-42],[-36,-36],[-41,-28],[-36,-24],[-40,-14],[-36,-12],[-39,-5]];
+  ctx.save(); ctx.translate(0, bob + (casting ? -4 : 0));
+  ctx.fillStyle = 'rgba(70,74,88,.9)'; ctx.beginPath(); ctx.ellipse(-34, -72, 10, 5.5, 0, 0, 7); ctx.fill();
+  ctx.shadowColor = C.yellow; ctx.shadowBlur = casting ? 16 : 6;
+  ctx.strokeStyle = casting && (t & 2) ? '#FFFFFF' : (fl ? '#FFFFFF' : '#F2C838'); ctx.lineWidth = casting ? 2.8 : 2.2;
+  ctx.beginPath(); bolt.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
+  ctx.restore();
+  // strong arms, flexed
+  const arm = (pts, fy) => {
+    ctx.strokeStyle = ARM; ctx.lineWidth = 7; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y + bob + fy * (i === 2 ? 1 : 0)) : ctx.moveTo(x, y + bob)); ctx.stroke();
+    ctx.fillStyle = ARM; ctx.beginPath(); ctx.arc(pts[2][0], pts[2][1] + bob + fy, 5, 0, 7); ctx.fill();
+  };
+  arm([[-21, -37], [-30, -29], [-38, -41]], casting ? -4 : 0);
+  arm([[23, -36], [33, -27], [39, -40]], 0);
+  // storm cloud head: soft gray edge, black middle, a faint gold ring
+  ctx.fillStyle = fl ? 'rgba(255,255,255,.5)' : 'rgba(92,97,112,.5)';
+  for (const [x, y, rx, ry] of [[0,-46,30,17],[-17,-42,15,11],[18,-43,15,11],[-6,-54,16,9],[10,-53,15,9]]) { ctx.beginPath(); ctx.ellipse(x, y + bob, rx, ry, 0, 0, 7); ctx.fill(); }
+  ctx.fillStyle = DARK;
+  for (const [x, y, rx, ry] of [[0,-46,26,14],[-15,-42,12,8.5],[16,-43,12,8.5],[-6,-53,13,7],[10,-52,12,7]]) { ctx.beginPath(); ctx.ellipse(x, y + bob, rx, ry, 0, 0, 7); ctx.fill(); }
+  ctx.strokeStyle = 'rgba(217,174,48,.28)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(1, -47 + bob, 20, 10, -.08, 0, 7); ctx.stroke();
+  // angry gold eyebrows, shaped like little lightning bolts
+  ctx.strokeStyle = GOLD; ctx.lineWidth = 3.2;
+  ctx.beginPath(); ctx.moveTo(-15, -59 + bob); ctx.lineTo(-12, -53.5 + bob); ctx.lineTo(-7, -52.5 + bob); ctx.lineTo(-4.5, -49.5 + bob);
+  ctx.moveTo(14, -58 + bob); ctx.lineTo(10.5, -53 + bob); ctx.lineTo(6.5, -52.5 + bob); ctx.lineTo(4, -48.5 + bob); ctx.stroke();
+  // blue eyes
+  ctx.fillStyle = fl ? '#FFFFFF' : '#2F6BE8';
+  ctx.beginPath(); ctx.ellipse(-8, -46.5 + bob, 3.5, 3.9, .2, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(8, -45.5 + bob, 3.7, 3.6, -.2, 0, 7); ctx.fill();
+  // gold mouth, open in a roar
+  ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(-10, -37 + bob); ctx.quadraticCurveTo(0, -42 + bob, 11, -37.5 + bob); ctx.quadraticCurveTo(0, -35 + bob, -10, -37 + bob); ctx.closePath(); ctx.stroke();
+  ctx.lineCap = 'butt';
+}
+
+// Teddy's own drawing: the big ice monster (blue block head, pointy ears, angry eyebrows, fangs, shaggy snow body with icicle spikes)
+function teddyIce(bob, fl){
+  const LB = fl ? '#FFFFFF' : '#A6E1F7', DB = fl ? '#FFFFFF' : '#3D7FE8', WH = '#FFFFFF', LINE = '#5FA8D9';
+  ctx.lineWidth = 1.4; ctx.strokeStyle = LINE; ctx.lineJoin = 'round';
+  const fur = (l, t, r, b, fill) => {
+    ctx.fillStyle = fill; ctx.beginPath(); ctx.moveTo(l, t); ctx.lineTo(r, t);
+    for (let y = t; y < b - 1; y += 5) { ctx.lineTo(r + 2.5, Math.min(b, y + 2.5)); ctx.lineTo(r, Math.min(b, y + 5)); }
+    for (let x = r; x > l + 1; x -= 4) { ctx.lineTo(Math.max(l, x - 2), b + 3); ctx.lineTo(Math.max(l, x - 4), b); }
+    for (let y = b; y > t + 1; y -= 5) { ctx.lineTo(l - 2.5, Math.max(t, y - 2.5)); ctx.lineTo(l, Math.max(t, y - 5)); }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  };
+  const spikes = (x, ys, dir) => { ctx.fillStyle = LB; for (const y of ys) { ctx.beginPath(); ctx.moveTo(x, y - 2.5); ctx.lineTo(x + dir * 10, y - 1); ctx.lineTo(x, y + 2.5); ctx.closePath(); ctx.fill(); ctx.stroke(); } };
+  const blob = (x, y, rx, ry) => { ctx.fillStyle = DB; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, .3, 0, 7); ctx.fill(); };
+  // back arm, hanging long, with icicles
+  spikes(-24, [-34 + bob, -24 + bob, -14 + bob], -1);
+  fur(-25, -40 + bob, -17, -4 + bob, WH); blob(-21, -22 + bob, 2.5, 4);
+  // legs and blue feet
+  fur(-14, -20, -4, -2, WH); fur(4, -20, 14, -2, WH);
+  blob(-10, -1, 6, 2.6); blob(10, -1, 6, 2.6);
+  // body with blue patches and a frosty stripe
+  fur(-17, -42 + bob, 17, -16 + bob, WH);
+  blob(-9, -31 + bob, 3, 4); blob(8, -26 + bob, 4, 5); blob(3, -37 + bob, 2.2, 2);
+  ctx.fillStyle = fl ? WH : 'rgba(126,196,245,.55)'; ctx.fillRect(-15, -22 + bob, 30, 3);
+  // front arm with icicles
+  spikes(25, [-36 + bob, -26 + bob, -16 + bob, -8 + bob], 1);
+  fur(16, -41 + bob, 25, -5 + bob, WH); blob(21, -18 + bob, 2.5, 5); blob(19, -32 + bob, 2, 2.5);
+  // head: blue block with pointy ears and a spike on top
+  const hy = bob;
+  ctx.fillStyle = LB;
+  ctx.beginPath(); ctx.moveTo(-15, -56 + hy); ctx.lineTo(-25, -66 + hy); ctx.lineTo(-13, -50 + hy); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(15, -56 + hy); ctx.lineTo(30, -60 + hy); ctx.lineTo(15, -48 + hy); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-4, -61 + hy); ctx.lineTo(-1, -71 + hy); ctx.lineTo(3, -61 + hy); ctx.closePath(); ctx.fill(); ctx.stroke();
+  rr(-17, -63 + hy, 34, 27, 7); ctx.fill(); ctx.stroke();
+  // angry eyes
+  for (const x of [-7, 7]) {
+    ctx.fillStyle = WH; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x, -52 + hy, 3.6, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(x + 1.4, -51.5 + hy, 1.5, 0, 7); ctx.fill();
+  }
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-13, -59 + hy); ctx.lineTo(-2, -55.5 + hy); ctx.moveTo(13, -59 + hy); ctx.lineTo(2, -55.5 + hy); ctx.stroke();
+  // big white mouth with black fangs
+  ctx.fillStyle = WH; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(-9, -46 + hy); ctx.quadraticCurveTo(1, -50 + hy, 10, -46 + hy); ctx.quadraticCurveTo(2, -36 + hy, -9, -46 + hy); ctx.fill();
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(-8, -45.5 + hy); ctx.lineTo(-5, -41 + hy); ctx.lineTo(-2, -46 + hy); ctx.lineTo(1, -40 + hy); ctx.lineTo(4, -46 + hy); ctx.lineTo(6, -41.5 + hy); ctx.lineTo(9, -45.5 + hy); ctx.stroke();
+  // snowy swirls around him
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(-30, -60 + Math.sin(t * .05) * 2, 3.5, Math.PI * .8, Math.PI * 2.2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(36, -48 + Math.cos(t * .05) * 2, 4, Math.PI, Math.PI * 2.5); ctx.stroke();
+  ctx.lineCap = 'butt';
+}
+
+function drawBoss(b){
+  ctx.save(); ctx.translate(b.x + (b.wind > 0 ? Math.sin(t * 1.5) * 4 : 0), b.y - (b.wind > 0 ? (45 - b.wind) * .6 : 0));
+  if (b.wind > 0) label('STOMP!', 0, -280, 30, 'center', C.yellow);
+  ctx.fillStyle = 'rgba(28,43,74,.3)'; ctx.beginPath(); ctx.ellipse(0, 3, 110, 10, 0, 0, 7); ctx.fill();
+  const stomp = Math.sin(b.step) * 3;
+  for (const r of b.rocks) {
+    const dy = r.dy + (r.dy > -90 ? 0 : stomp);
+    ctx.fillStyle = b.flash > 0 ? '#FFFFFF' : r.c; ctx.strokeStyle = '#3F434A'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(r.dx, dy, r.r, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.beginPath(); ctx.arc(r.dx - r.r * .3, dy - r.r * .35, r.r * .35, 0, 7); ctx.fill();
+  }
+  // face
+  const fy = -202 + stomp, lk = b.face * 3;
+  ctx.shadowColor = C.orange; ctx.shadowBlur = 16; ctx.fillStyle = C.orange;
+  ctx.beginPath(); ctx.ellipse(-14 + lk, fy, 8, 6, 0, 0, 7); ctx.ellipse(14 + lk, fy, 8, 6, 0, 0, 7); ctx.fill();
+  ctx.shadowBlur = 0; ctx.fillStyle = C.yellow;
+  ctx.beginPath(); ctx.arc(-14 + lk * 1.4, fy, 3, 0, 7); ctx.arc(14 + lk * 1.4, fy, 3, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#2B2E33'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-26, fy - 14); ctx.lineTo(-6, fy - 8); ctx.moveTo(26, fy - 14); ctx.lineTo(6, fy - 8); ctx.stroke();
+  ctx.fillStyle = '#2B2E33'; rr(-16, fy + 14, 32, 8, 3); ctx.fill();
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(-10, fy + 14, 5, 4); ctx.fillRect(5, fy + 14, 5, 4);
+  ctx.restore();
+}
+
+function drawRock(r){
+  if (r.kind === 'wave') {
+    ctx.save(); ctx.translate(r.x, GROUND);
+    ctx.fillStyle = r.c || C.orange; ctx.strokeStyle = '#8C3F0A'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-22, 0); ctx.quadraticCurveTo(0, -46 - Math.sin(t * .4) * 6, 22, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore(); return;
+  }
+  if (r.kind === 'ice') {
+    ctx.save(); ctx.translate(r.x, r.y); ctx.scale(Math.sign(r.vx) || 1, 1);
+    ctx.fillStyle = '#E6F6FF'; ctx.strokeStyle = '#5FA8D9'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(-4, -8); ctx.lineTo(-16, 0); ctx.lineTo(-4, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore(); return;
+  }
+  ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.rot);
+  ctx.fillStyle = r.c; ctx.strokeStyle = '#3F434A'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2, rad = r.r * (i % 2 ? .85 : 1.05); ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad); }
+  ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+
+function heart(x, y, s, full){
+  ctx.save(); ctx.translate(x, y); ctx.scale(s / 32, s / 32);
+  ctx.beginPath(); ctx.moveTo(16, 29); ctx.bezierCurveTo(-8, 14, 2, -4, 16, 7); ctx.bezierCurveTo(30, -4, 40, 14, 16, 29); ctx.closePath();
+  ctx.fillStyle = full ? '#F2493A' : 'rgba(255,255,255,.35)'; ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = C.ink; ctx.stroke(); ctx.restore();
+}
+
+function label(text, x, y, size, align = 'left', fill = '#FFFFFF'){
+  ctx.font = `700 ${size}px ${FONT}`; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round'; ctx.lineWidth = size * .28; ctx.strokeStyle = C.ink; ctx.strokeText(text, x, y);
+  ctx.fillStyle = fill; ctx.fillText(text, x, y);
+}
+
+function drawHud(){
+  const L = LEVELS[level];
+  const bigM = mons.find(m => m.big);
+  for (let i = 0; i < hero.maxHp; i++) heart(18 + i * 34, 14, 30, i < hero.hp);
+  label(heroName + "'s swords: level " + swordLvl, 20, 66, 22, 'left', C.yellow);
+  if (level >= 1) label('Powers: ' + powerNames().join(', '), 20, 96, 20, 'left', C.cream);
+  if (boss) {
+    if (!boss.dead) {
+      label('Giant rock monster', W - 20, 24, 22, 'right');
+      const bw = 260, x = W - 20 - bw, y = 42;
+      ctx.fillStyle = C.ink; rr(x - 3, y - 3, bw + 6, 20, 10); ctx.fill();
+      ctx.fillStyle = C.orange; rr(x, y, bw * Math.max(0, boss.hp) / boss.maxHp, 14, 7); ctx.fill();
+    }
+  } else if (bigM) {
+    label(BIG[bigM.type].name, W - 20, 24, 22, 'right');
+    const bw = 260, x = W - 20 - bw, y = 42;
+    ctx.fillStyle = C.ink; rr(x - 3, y - 3, bw + 6, 20, 10); ctx.fill();
+    ctx.fillStyle = C.orange; rr(x, y, bw * Math.max(0, bigM.hp) / bigM.maxHp, 14, 7); ctx.fill();
+  } else {
+    label('Monsters left: ' + (toSpawn + mons.length) + ' + boss', W - 20, 24, 22, 'right');
+  }
+  if (bannerT > 0) {
+    ctx.globalAlpha = Math.min(1, bannerT / 30);
+    label(boss || bigM ? 'Boss!' : 'Level ' + (level + 1), W / 2, 190, 52, 'center', C.yellow);
+    label(boss ? 'Giant rock monster' : bigM ? BIG[bigM.type].name : L.name, W / 2, 245, 34, 'center');
+    if (!bigM && level === 0 && L.type !== 'boss') label('Tip: press jump twice to double jump!', W / 2, 292, 22, 'center', C.cream);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function draw(){
+  ctx.save();
+  if (shake) ctx.translate(rand(-shake, shake), rand(-shake, shake));
+  const L = LEVELS[level];
+  drawBg(L);
+  if (state !== 'title') {
+    for (const r of rocks) drawRock(r);
+    if (boss && !boss.dead) drawBoss(boss);
+    for (const m of mons) { drawMon(m); if (m.frozen > 0) iceBlock(m.x - m.w / 2 - 6, m.y - m.h - 8, m.w + 12, m.h + 8); }
+    if (boss && !boss.dead && boss.frozen > 0) iceBlock(boss.x - 130, boss.y - 250, 260, 250);
+    for (const s of strikes) {
+      ctx.save();
+      if (s.t > 0) {
+        // warning: a flickering mark on the ground where the bolt will land
+        const on = (s.t >> 2) & 1;
+        ctx.globalAlpha = on ? .9 : .45; ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.ellipse(s.x, GROUND + 2, 36, 7, 0, 0, 7); ctx.fill();
+        ctx.globalAlpha = .25; ctx.fillRect(s.x - 2, 0, 4, GROUND);
+        ctx.globalAlpha = 1; label('!', s.x, GROUND - 96, 34, 'center', C.yellow);
+      } else {
+        ctx.globalAlpha = Math.min(1, s.life / 10); ctx.shadowColor = C.yellow; ctx.shadowBlur = 22; ctx.lineJoin = 'round';
+        for (const [col, lw] of [[C.yellow, 12], ['#FFFFFF', 4]]) {
+          ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(s.x + 14, -10);
+          for (let k = 1; k < 8; k++) ctx.lineTo(s.x + (k % 2 ? -16 : 16), GROUND * k / 8);
+          ctx.lineTo(s.x, GROUND); ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    for (const z of zaps) {
+      ctx.save(); ctx.globalAlpha = z.life / 14; ctx.shadowColor = C.yellow; ctx.shadowBlur = 14;
+      for (const [col, lw] of [[C.yellow, 7], ['#FFFFFF', 2]]) {
+        ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(z.x1, z.y1);
+        for (let k = 1; k < 5; k++) { const f = k / 5; ctx.lineTo(z.x1 + (z.x2 - z.x1) * f + (k % 2 ? 10 : -10), z.y1 + (z.y2 - z.y1) * f + (k % 2 ? -10 : 10)); }
+        ctx.lineTo(z.x2, z.y2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+  drawHero(hero);
+  for (const p of parts) {
+    ctx.globalAlpha = Math.min(1, p.life / 20); ctx.fillStyle = p.c;
+    if (p.rock) { ctx.strokeStyle = '#3F434A'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, 7); ctx.fill(); ctx.stroke(); }
+    else ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
+  }
+  ctx.globalAlpha = 1;
+  if (state === 'play' || state === 'card') drawHud();
+  if (flashT > 0) { ctx.fillStyle = `rgba(255,244,201,${flashT / 18})`; ctx.fillRect(0, 0, W, H); }
+  ctx.restore();
+}
+
+/* ---------- loop ---------- */
+hero = newHero();
+showCard({eyebrow:'A game designed by Teddy', title:"Teddy's Sword Game", text:'Fight ice, rock and lightning monsters and their bosses to level up your two swords. Watch for the ! because that monster is about to attack. Beat the big lightning monster to get the lightning sword!', btn:'Play', askName:true}, () => startLevel(0));
+
+let last = performance.now(), acc = 0;
+const STEP = 1000 / 60;
+function frame(now){
+  acc += Math.min(100, now - last); last = now;
+  while (acc >= STEP) { update(); acc -= STEP; }
+  draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
