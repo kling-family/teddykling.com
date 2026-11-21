@@ -6,11 +6,11 @@
 <meta name="robots" content="noindex">
 <meta name="description" content="A sword game designed by Teddy.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Teddy's Sword Game">
+<meta property="og:title" content="Monsters and Swords">
 <meta property="og:description" content="A sword game designed by Teddy.">
 <meta property="og:url" content="https://teddykling.com/sword-game/">
 <meta property="og:image" content="https://teddykling.com/sword-game/cover.jpg">
-<title>Teddy's Sword Game</title>
+<title>Monsters and Swords</title>
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,7 +75,7 @@ kbd{font-family:inherit;font-weight:600;background:var(--cream);color:var(--ink)
 <main>
 <div class="wrap">
   <div class="stage">
-    <canvas id="game" width="960" height="540" aria-label="Teddy's sword game"></canvas>
+    <canvas id="game" width="960" height="540" aria-label="Monsters and Swords, a game by Teddy"></canvas>
     <div class="card" id="card">
       <div class="card-inner">
         <div class="eyebrow" id="cardEyebrow"></div>
@@ -986,7 +986,7 @@ function draw(){
 
 /* ---------- loop ---------- */
 hero = newHero();
-showCard({eyebrow:'A game designed by Teddy', title:"Teddy's Sword Game", text:'Fight ice, rock and lightning monsters and their bosses to level up your two swords. Watch for the ! because that monster is about to attack. Beat the big lightning monster to get the lightning sword!', btn:'Play', askName:true}, () => startLevel(0));
+showCard({eyebrow:'A game designed by Teddy', title:"Monsters and Swords", text:'Fight ice, rock and lightning monsters and their bosses to level up your two swords. Watch for the ! because that monster is about to attack. Beat the big lightning monster to get the lightning sword!', btn:'Play', askName:true}, () => startLevel(0));
 
 let last = performance.now(), acc = 0;
 const STEP = 1000 / 60;
