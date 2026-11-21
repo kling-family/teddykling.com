@@ -276,7 +276,7 @@ function update(){
 }
 
 // Landing on top of something bounces you up: no damage to you or to it
-function tryBounce(top, target){
+function tryBounce(top, target, boss){
   const h = hero;
   if (h.vy <= 0 || h.y - h.vy > top + 26) return false;
   h.y = Math.min(h.y, top); h.vy = keys.up ? -14 : -11; h.onG = false; h.jumps = 1;
@@ -287,6 +287,9 @@ function tryBounce(top, target){
   }
   // a little safe time, and nearby monsters get pushed back (no damage)
   h.safe = 40;
+  // bosses shake you off their head: they fling you to the side, you get no safe time,
+  // and landing on them again too soon hurts
+  if (boss) { h.safe = 0; h.vy = -12; h.knockV = (h.x < boss.x ? -1 : 1) * 11; boss.stompCd = 80; shake = Math.max(shake, 6); }
   for (const m of mons) {
     const dx = m.x - h.x;
     if (Math.abs(dx) < 140) { m.knock = (dx < 0 ? -1 : 1) * (m.big ? 5 : 10); m.wind = 0; m.dash = 0; }
@@ -342,7 +345,7 @@ function updatePlay(){
   } else if (!bigSpawned && mons.length === 0 && L.type !== 'boss') {
     const zb = L.type === 'zap', d = MON[L.type], sc = zb ? 3 : 2.2, side = hero.x < W / 2 ? 1 : -1;
     mons.push({type:L.type, big:true, sc, x: side > 0 ? W + 70 : -70, y:GROUND, vy:0, w:(zb ? 40 : d.w) * sc, h:d.h * sc, hp:BIG[L.type].hp, maxHp:BIG[L.type].hp,
-      speed:d.speed * .8, knock:0, flash:0, hop:rand(60, 90), phase:0, atk:rand(80, 120), wind:0, dash:0, shots:0, shotT:0, hitBy:-1, onG:true, face:-side});
+      speed:d.speed * 1.5, knock:0, flash:0, hop:rand(60, 90), phase:0, atk:rand(80, 120), wind:0, dash:0, shots:0, shotT:0, hitBy:-1, onG:true, face:-side});
     bigSpawned = true; bannerT = 130; shake = 8; hero.hp = hero.maxHp; burst(hero.x, hero.y - 50, ['#F2493A', '#FFFFFF', '#FFCB2E'], 24, 5);
   }
 
@@ -386,10 +389,19 @@ function updatePlay(){
       if (m.big) { m.vy = rand(-15, -12); m.hop = m.hp < m.maxHp / 2 ? rand(60, 85) : rand(80, 115); m.knock = dir * Math.min(15, dist / 10); }
       else { m.vy = rand(-13, -10); m.hop = rand(45, 90); if (dist < 300) m.knock = dir * Math.min(14, dist / 12); }
     }
+    // bosses don't let you stand on them: they hop out from under you
+    if (m.big && !m.frozen && m.onG && Math.abs(h.x - m.x) < m.w / 2 + 40 && h.y < m.y - m.h + 20 && (m.dodgeCd || 0) <= 0) {
+      m.vy = -9; m.knock = (m.x < W / 2 ? 1 : -1) * 13; m.dodgeCd = 50;
+    }
+    if (m.dodgeCd > 0) m.dodgeCd--;
+    if (m.stompCd > 0) m.stompCd--;
     if (m.flash > 0) m.flash--;
     m.phase += .1;
     const mb = {l:m.x - m.w/2 + 7, r:m.x + m.w/2 - 7, t:m.y - m.h + 8, b:m.y};
-    if (overlap(hb, mb) && !tryBounce(m.y - m.h, m) && !hero.safe && !m.frozen) hurtHero(m.x);
+    if (overlap(hb, mb)) {
+      const canStomp = !(m.big && m.stompCd > 0);
+      if (!(canStomp && tryBounce(m.y - m.h, m, m.big ? m : null)) && !hero.safe && !m.frozen) hurtHero(m.x);
+    }
   }
   mons = mons.filter(m => !m.dead);
   // keep monsters from piling up on the same spot
@@ -406,7 +418,11 @@ function updatePlay(){
     else {
     b.face = Math.sign(d) || 1;
     if (b.knock) { b.x += b.knock; b.knock *= .8; if (Math.abs(b.knock) < .3) b.knock = 0; }
-    else if (Math.abs(d) > 150) { b.x += Math.sign(d) * (b.hp < b.maxHp / 2 ? 1.2 : .9); b.step += .08; }
+    else if (Math.abs(d) > 150) { b.x += Math.sign(d) * (b.hp < b.maxHp / 2 ? 2.2 : 1.6); b.step += .12; }
+    // he stomps away from under you if you try to ride on his head
+    if (!b.knock && (b.dodgeCd || 0) <= 0 && Math.abs(d) < 130 && h.y < b.y - 170) { b.knock = (b.x < W / 2 ? 1 : -1) * 14; b.dodgeCd = 70; shake = Math.max(shake, 5); }
+    if (b.dodgeCd > 0) b.dodgeCd--;
+    if (b.stompCd > 0) b.stompCd--;
     b.x = clamp(b.x, 120, W - 120);
     if (b.flash > 0) b.flash--;
     const angry = b.hp < b.maxHp / 2;
@@ -424,7 +440,7 @@ function updatePlay(){
     }
     if (overlap(hb, {l:b.x - 88, r:b.x + 88, t:b.y - 215, b:b.y})) {
       // jump on his head: you bounce and he takes damage
-      if (tryBounce(b.y - 215, null)) stompBoss(2);
+      if (!(b.stompCd > 0) && tryBounce(b.y - 215, null, b)) stompBoss(2);
       else if (!b.frozen) hurtHero(b.x);
     }
   }
