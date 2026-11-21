@@ -50,6 +50,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .btn{font:inherit;font-weight:700;font-size:22px;background:var(--yellow);color:var(--ink);border:3px solid var(--blue);
   border-radius:999px;padding:6px 30px;cursor:pointer;margin-top:6px}
 .btn:hover{background:#FFD95C}
+.picks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
+.picks .btn{margin-top:0;font-size:18px;padding:5px 16px;background:#FFFFFF}
+.picks .btn:hover{background:var(--cream)}
+.picks .btn.zap{background:var(--yellow)}
+.picks-lbl{flex-basis:100%;font-weight:600;color:var(--blue);font-size:17px}
 .btn:focus-visible{outline:4px solid var(--orange);outline-offset:3px}
 .keys{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;color:var(--muted);font-size:16px}
 kbd{font-family:inherit;font-weight:600;background:var(--cream);color:var(--ink);border:2px solid var(--blue);border-bottom-width:4px;border-radius:8px;padding:0 8px;margin-right:4px}
@@ -61,6 +66,8 @@ kbd{font-family:inherit;font-weight:600;background:var(--cream);color:var(--ink)
 .pad button.on{background:var(--orange);color:#fff}
 @media (pointer:coarse){.pad{display:flex}.keys{display:none}}
 @media (max-width:560px){
+  .picks{gap:5px;margin-top:3px}.picks .btn{font-size:13px;padding:2px 10px}.picks-lbl{font-size:13px}
+  .card-inner:has(.namebox:not([hidden])) .picks-lbl{display:none}
   .card-inner{padding:8px 14px 10px;gap:2px;border-width:3px;border-radius:16px}
   .eyebrow{font-size:11px}.card h2{font-size:19px}.card p{font-size:13px}
   .btn{font-size:16px;padding:3px 20px;margin-top:3px}
@@ -85,6 +92,7 @@ kbd{font-family:inherit;font-weight:600;background:var(--cream);color:var(--ink)
           <label for="heroName">Name your hero</label>
           <input id="heroName" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Type a name">
         </div>
+        <div class="picks" id="cardPicks" hidden></div>
         <button class="btn" id="cardBtn" type="button"></button>
       </div>
     </div>
@@ -152,7 +160,7 @@ const KEYMAP = {ArrowLeft:'left', KeyA:'left', ArrowRight:'right', KeyD:'right',
 function press(k){ if (!keys[k]) { if (k === 'up') jumpQ = true; if (k === 'swing') swingQ = true; } keys[k] = true; }
 addEventListener('keydown', e => {
   if (e.target === nameEl) { if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); goBtn(); } return; }
-  if (!cardEl.hidden && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); if (!e.repeat) goBtn(); return; }
+  if (!cardEl.hidden && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); if (e.repeat) return; const f = document.activeElement; if (f && f.parentNode === picksEl) f.click(); else goBtn(); return; }
   const k = KEYMAP[e.code]; if (!k) return;
   e.preventDefault(); press(k);
 });
@@ -174,6 +182,24 @@ const cardEl = document.getElementById('card');
 const cardBtn = document.getElementById('cardBtn');
 const nameBox = document.getElementById('nameBox');
 const nameEl = document.getElementById('heroName');
+const picksEl = document.getElementById('cardPicks');
+// once you win the lightning sword you can take it to any level (remembered on this device)
+let zapUnlocked = false;
+try { zapUnlocked = localStorage.getItem('lightningSword') === '1'; } catch (_) {}
+function showPicks(){
+  picksEl.textContent = '';
+  const lbl = document.createElement('span'); lbl.className = 'picks-lbl'; lbl.textContent = 'Try the lightning sword on:'; picksEl.appendChild(lbl);
+  LEVELS.forEach((L, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn' + (L.type === 'zap' ? ' zap' : ''); b.textContent = ['Ice', 'Rock', 'Lightning'][i] + ' level';
+    b.addEventListener('click', () => {
+      const now = performance.now(); if (now - lastGo < 350) return; lastGo = now;
+      if (!nameBox.hidden) readName();
+      cardEl.hidden = true; cardAction = null; startLevel(i, 0, true);
+    });
+    picksEl.appendChild(b);
+  });
+}
 let heroName = 'Hero';
 try { const saved = localStorage.getItem('heroName'); if (saved) { heroName = saved; nameEl.value = saved; } } catch (_) {}
 function readName(){
@@ -189,11 +215,12 @@ function showCard(o, action){
   cardBtn.textContent = o.btn;
   cardEl.classList.toggle('top', !!o.top);
   nameBox.hidden = !o.askName;
+  picksEl.hidden = !o.picks; if (o.picks) showPicks();
   cardAction = action;
   cardEl.hidden = false;
   for (const k in keys) keys[k] = false;
   lastGo = performance.now();
-  setTimeout(() => { try { (o.askName ? nameEl : cardBtn).focus({preventScroll:true}); } catch (_) {} }, 50);
+  setTimeout(() => { try { (o.askName ? nameEl : o.picks ? picksEl.querySelector('button') : cardBtn).focus({preventScroll:true}); } catch (_) {} }, 50);
 }
 function goBtn(){
   const now = performance.now();
@@ -209,8 +236,8 @@ cardBtn.addEventListener('click', goBtn);
 /* ---------- setup ---------- */
 function newHero(){ return {x:W/2, y:GROUND, vx:0, vy:0, w:40, h:72, face:1, onG:true, swingT:0, cd:0, swingId:0, inv:0, hp:10, maxHp:10, walk:0, knockV:0, lightning:false}; }
 
-function startLevel(i, carryHp){
-  level = i; swordLvl = i + 1;
+function startLevel(i, carryHp, zap){
+  level = i; zapMode = !!zap; swordLvl = zapMode ? 4 : i + 1;
   const L = LEVELS[i];
   hero = newHero();
   if (carryHp) hero.hp = carryHp; mons = []; parts = []; rocks = []; zaps = []; strikes = [];
@@ -222,9 +249,13 @@ function startLevel(i, carryHp){
 }
 
 // Element powers: you get the power of each level you beat
-const hasIce = () => level >= 1, hasRock = () => level >= 2, hasZap = () => level >= 3;
+let zapMode = false;
+const hasIce = () => zapMode || level >= 1, hasRock = () => zapMode || level >= 2, hasZap = () => zapMode || level >= 3;
+// the lightning sword is longer and hits harder than your two swords
+const swordLen = () => zapMode ? 92 : SWORD[swordLvl].len;
+const swordDmg = () => swordLvl + (hasRock() ? 1 : 0) + (zapMode ? 2 : 0);
 let zaps = [], strikes = [];
-function powerNames(){ return ['Ice', 'Rock', 'Lightning'].slice(0, Math.min(3, level)); }
+function powerNames(){ return ['Ice', 'Rock', 'Lightning'].slice(0, zapMode ? 3 : Math.min(3, level)); }
 
 function makeBoss(){
   const R = [];
@@ -475,7 +506,7 @@ function updatePlay(){
   }
   if (deadT > 0 && --deadT === 0) {
     state = 'card';
-    showCard({eyebrow:'Ouch!', title:'Out of hearts', text:'Try this level again. You can do it!', btn:'Try again'}, () => startLevel(level));
+    showCard({eyebrow:'Ouch!', title:'Out of hearts', text:'Try this level again. You can do it!', btn:'Try again'}, () => startLevel(level, 0, zapMode));
   }
 }
 
@@ -513,12 +544,12 @@ function throwRock(b, off){
 }
 
 function doHits(){
-  const h = hero, reach = 24 + SWORD[swordLvl].len;
+  const h = hero, reach = 24 + swordLen();
   const box = {l:h.x - reach, r:h.x + reach, t:h.y - h.h - 34, b:h.y + 4};
   for (const m of mons) {
     if (m.hitBy === h.swingId || m.dead) continue;
     if (!overlap(box, {l:m.x - m.w/2, r:m.x + m.w/2, t:m.y - m.h, b:m.y})) continue;
-    m.hitBy = h.swingId; m.hp -= swordLvl + (hasRock() ? 1 : 0); m.flash = 8;
+    m.hitBy = h.swingId; m.hp -= swordDmg(); m.flash = 8;
     m.knock = (m.x < h.x ? -1 : 1) * (m.big ? 4 : 10) * (hasRock() ? 1.6 : 1);
     burst(m.x, m.y - m.h / 2, PCOL[m.type], 8);
     if (hasRock()) burst(m.x, m.y - m.h / 2, PCOL.rock, 6);
@@ -531,7 +562,7 @@ function doHits(){
   }
   const b = boss;
   if (b && !b.dead && b.hitBy !== h.swingId && overlap(box, {l:b.x - 95, r:b.x + 95, t:b.y - 250, b:b.y})) {
-    b.hitBy = h.swingId; b.hp -= swordLvl + (hasRock() ? 1 : 0); b.flash = 8; b.knock = (b.x < h.x ? -1 : 1) * (hasRock() ? 8 : 5); shake = Math.max(shake, 5);
+    b.hitBy = h.swingId; b.hp -= swordDmg(); b.flash = 8; b.knock = (b.x < h.x ? -1 : 1) * (hasRock() ? 8 : 5); shake = Math.max(shake, 5);
     if (hasIce() && !(b.iceCd > 0)) { b.frozen = 90; b.wind = 0; b.iceCd = 90 + 240; burst(b.x, b.y - 130, PCOL.ice, 20); }
     if (hasZap()) chainZap(b.x, b.y - 130, null);
     // knock rocks off him
@@ -571,6 +602,10 @@ function chainZap(x, y, from){
 
 function levelDone(){
   state = 'card';
+  if (zapMode) {
+    showCard({eyebrow:'You beat the ' + BIG[LEVELS[level].type].name.toLowerCase() + '!', title:'The lightning sword wins again!', text:'Pick a level to try it on next.', btn:'Play again from the start', picks:true}, () => startLevel(0));
+    return;
+  }
   const next = level + 1;
   const hp = Math.min(hero.maxHp, hero.hp + 2);
   if (!LEVELS[next]) { winGame(); return; }
@@ -584,7 +619,8 @@ function levelDone(){
 function winGame(){
   state = 'win';
   hero.x = W / 2; hero.y = GROUND; hero.face = 1; hero.swingT = 0; hero.inv = 0; hero.lightning = true; hero.walk = 0;
-  showCard({eyebrow:'You beat the big lightning monster!', title:heroName + ' got the lightning sword!', text:'The most powerful sword.', btn:'Play again', top:true}, () => startLevel(0));
+  zapUnlocked = true; try { localStorage.setItem('lightningSword', '1'); } catch (_) {}
+  showCard({eyebrow:'You beat the big lightning monster!', title:heroName + ' got the lightning sword!', text:'The most powerful sword. Take it to any level and try it out!', btn:'Play again from the start', top:true, picks:true}, () => startLevel(0));
 }
 
 /* ---------- drawing ---------- */
@@ -655,13 +691,13 @@ function drawHero(h){
   const lerp = (a, b, k) => a + (b - a) * k;
   const fa = h.lightning ? -Math.PI / 2 - .15 : (p >= 0 ? lerp(-2.2, .9, e) : -1.1 + Math.sin(t * .06) * .05);
   const ba = h.lightning ? -2.3 : (p >= 0 ? lerp(-.94, -4.04, e) : -2.04 - Math.sin(t * .06) * .05);
-  const len = SWORD[swordLvl].len;
+  const len = swordLen();
 
   const arm = (sx, sy, a, lightning) => {
     const hx = sx + Math.cos(a) * 15, hy = sy + Math.sin(a) * 15;
     if (p >= 0 && !h.lightning) {
-      ctx.save(); ctx.globalAlpha *= .35; ctx.strokeStyle = SWORD[swordLvl].glow || '#FFFFFF'; ctx.lineWidth = 14; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(sx, sy, 15 + len, a - (a > -2.5 && sx > 0 ? .9 : -.9), a, sx < 0); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.globalAlpha *= .35; ctx.strokeStyle = lightning ? C.yellow : SWORD[swordLvl].glow || '#FFFFFF'; ctx.lineWidth = 14; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(sx, sy, 15 + (lightning ? len : SWORD[swordLvl].len), a - (a > -2.5 && sx > 0 ? .9 : -.9), a, sx < 0); ctx.stroke(); ctx.restore();
     }
     ctx.strokeStyle = '#F1C27D'; ctx.lineWidth = 8; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(hx, hy); ctx.stroke();
@@ -685,7 +721,7 @@ function drawHero(h){
   ctx.beginPath(); ctx.moveTo(-12, -78); ctx.lineTo(-22, -84 + Math.sin(t * .2) * 2); ctx.lineTo(-21, -73); ctx.fill();
   ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(9, -70, 2.4, 0, 7); ctx.fill();
   ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(8, -65, 4, .2, 1.6); ctx.stroke();
-  arm(7, -48, fa, h.lightning);
+  arm(7, -48, fa, h.lightning || zapMode);
   ctx.restore();
   if (state !== 'title') { ctx.save(); ctx.globalAlpha = .95; label(heroName, h.x, h.y - 108, 18, 'center', C.cream); ctx.restore(); }
 }
@@ -924,8 +960,8 @@ function drawHud(){
   const L = LEVELS[level];
   const bigM = mons.find(m => m.big);
   for (let i = 0; i < hero.maxHp; i++) heart(18 + i * 34, 14, 30, i < hero.hp);
-  label(heroName + "'s swords: level " + swordLvl, 20, 66, 22, 'left', C.yellow);
-  if (level >= 1) label('Powers: ' + powerNames().join(', '), 20, 96, 20, 'left', C.cream);
+  label(zapMode ? heroName + "'s lightning sword" : heroName + "'s swords: level " + swordLvl, 20, 66, 22, 'left', C.yellow);
+  if (level >= 1 || zapMode) label('Powers: ' + powerNames().join(', '), 20, 96, 20, 'left', C.cream);
   if (boss) {
     if (!boss.dead) {
       label('Giant rock monster', W - 20, 24, 22, 'right');
@@ -1002,7 +1038,7 @@ function draw(){
 
 /* ---------- loop ---------- */
 hero = newHero();
-showCard({eyebrow:'A game designed by Teddy', title:"Monsters and Swords", text:'Fight ice, rock and lightning monsters and their bosses to level up your two swords. Watch for the ! because that monster is about to attack. Beat the big lightning monster to get the lightning sword!', btn:'Play', askName:true}, () => startLevel(0));
+showCard({eyebrow:'A game designed by Teddy', title:"Monsters and Swords", text:'Fight ice, rock and lightning monsters and their bosses to level up your two swords. Watch for the ! because that monster is about to attack. Beat the big lightning monster to get the lightning sword!' + (zapUnlocked ? ' You have the lightning sword, so you can also take it to any level.' : ''), btn:'Play', askName:true, picks:zapUnlocked}, () => startLevel(0));
 
 let last = performance.now(), acc = 0;
 const STEP = 1000 / 60;
